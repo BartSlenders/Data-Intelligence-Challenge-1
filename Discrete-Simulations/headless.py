@@ -1,5 +1,6 @@
 # Import our robot algorithm to use in this simulation:
-from robot_configs.greedy_random_robot import robot_epoch
+#from robot_configs.greedy_random_robot import robot_epoch
+from robot_configs.value_iteration import robot_epoch
 import pickle
 from environment import Robot
 import matplotlib.pyplot as plt
