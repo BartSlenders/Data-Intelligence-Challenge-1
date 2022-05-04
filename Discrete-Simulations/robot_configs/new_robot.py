@@ -7,7 +7,6 @@ def robot_epoch(robot, gamma = 0.3, theta = 3):
     cols = robot.grid.n_cols
     i_position, j_position = robot.pos
     V = np.zeros((cols,rows))
-    # print(robot.grid.__dict__)
     for i in range(cols):
         for j in range(rows):
             # value =

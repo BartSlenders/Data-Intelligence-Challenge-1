@@ -18,6 +18,11 @@ def robot_epoch(robot, gamma = 0.3, theta = 3):
                 V[i,j] = -1  # we consider it as a wall
             else:
                 V[i,j] = inputgrid[i,j]
+
+    pi = np.zeros((cols,rows))
+    for i in range(cols):
+        for j in range(rows):
+            pi[i,j] = [0.2/3, 0.2/3, 0.2/3, 0.8]
     correctprob = 0.8
     wrongprob = 1 - correctprob
     # initialize V
@@ -35,7 +40,7 @@ def robot_epoch(robot, gamma = 0.3, theta = 3):
                 if current_tile < 0:  # if the tile is a wall or obstacle, we are never on it, so we don't update it
                     continue
                 else:  # we will check the surrounding tiles, format of tiles is up, left, right, down
-                    tiles = [inputgrid[i,j-1], inputgrid[i-1,j], inputgrid[i+1, j], inputgrid[i,j+1]]
+                    tiles = [V[i,j-1], V[i-1,j], V[i+1, j], V[i,j+1]]
                     tiles = [i if i > 0 else 0 for i in tiles]
                     bestmove = max(tiles)
                     wrongmove = (sum(tiles)-bestmove)/3
