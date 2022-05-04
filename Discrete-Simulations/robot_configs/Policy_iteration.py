@@ -18,7 +18,6 @@ def robot_epoch(robot, gamma = 0.3, theta = 3):
                 V[i,j] = -1  # we consider it as a wall
             else:
                 V[i,j] = inputgrid[i,j]
-
     pi = np.zeros((cols,rows))
     for i in range(cols):
         for j in range(rows):
