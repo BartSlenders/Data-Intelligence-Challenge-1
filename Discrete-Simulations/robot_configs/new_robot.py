@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-def robot_epoch(robot):
+def robot_epoch(robot, gamma = 0.3, theta = 3):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -24,8 +24,6 @@ def robot_epoch(robot):
     V = -999
     prev_V = -9999
     count = 0
-    gamma = 0.3 # gamma is always below 1, and is to calculate return values
-    theta = 3
     position_bestmove = -99
     while V - prev_V > theta or position_bestmove <= 0:  # if V doesn't change, we stop
         prev_V = V
