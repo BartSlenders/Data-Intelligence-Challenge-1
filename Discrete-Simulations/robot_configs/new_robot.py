@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 def robot_epoch(robot):
     inputgrid = robot.grid.cells
@@ -17,6 +18,8 @@ def robot_epoch(robot):
                 grid[i,j] = -1  # we consider it as a wall
             else:
                 grid[i,j] = inputgrid[i,j]
+    correctprob = 0.8
+    wrongprob = 1 - correctprob
     # initialize V
     V = -999
     prev_V = -9999
@@ -35,9 +38,12 @@ def robot_epoch(robot):
                     continue
                 else:  # we will check the surrounding tiles, format of tiles is up, left, right, down
                     tiles = [inputgrid[i,j-1], inputgrid[i-1,j], inputgrid[i+1, j], inputgrid[i,j+1]]
+                    tiles = [i if i > 0 else 0 for i in tiles]
                     bestmove = max(tiles)
-                    return_value = bestmove * gamma**count
-                    grid[i,j] = current_tile + return_value  # function for value iteration
+                    wrongmove = (sum(tiles)-bestmove)/3
+                    return_value = bestmove * correctprob + wrongmove * wrongprob
+                    V_value = return_value * gamma**count
+                    grid[i,j] = current_tile + V_value# function for value iteration
                     if i == i_position and j == j_position:
                         position_bestmove = bestmove
         # at the end of an iteration we update V
@@ -57,11 +63,15 @@ def robot_epoch(robot):
     # print(i)
     direction = ['n', 'w', 'e', 's'][position]
     # print(robot.orientation)
+
     while robot.orientation != direction:
         robot.rotate('r')
-    # print('beep')
-    # print(grid)
-    robot.move()
+    if random.randint(1,5) != 1:
+        robot.move()
+    else:
+        for i in range(random.randint(1,3)):
+            robot.rotate('r')
+        robot.move()
 
 
 
