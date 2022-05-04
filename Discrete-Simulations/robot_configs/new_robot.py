@@ -9,9 +9,11 @@ def robot_epoch(robot):
     # print(robot.grid.__dict__)
     for i in range(cols):
         for j in range(rows):
-            if grid[i,j] < -2:  # if the robot is on the tile
+            # value =
+            # grid[i,j] = inputgrid[i,j] == -1
+            if inputgrid[i,j] < -2:  # if the robot is on the tile
                 grid[i,j] = 0  # we consider the tile clean
-            elif grid[i,j] == 3:  # if the tile is a death tile
+            elif inputgrid[i,j] == 3:  # if the tile is a death tile
                 grid[i,j] = -1  # we consider it as a wall
             else:
                 grid[i,j] = inputgrid[i,j]
@@ -21,8 +23,9 @@ def robot_epoch(robot):
     prev_V = -9999
     count = 0
     gamma = 0.3 # gamma is always below 1, and is to calculate return values
-    Stopping_value = 4
-    while V - prev_V > Stopping_value and count < 7:  # if V doesn't change, we stop
+    theta = 3
+    position_bestmove = -99
+    while V - prev_V > theta or position_bestmove <= 0:  # if V doesn't change, we stop
         prev_V = V
         count += 1
         # we start by looping over all tiles
@@ -36,9 +39,14 @@ def robot_epoch(robot):
                     bestmove = max(tiles)
                     return_value = bestmove * gamma**count
                     grid[i,j] = current_tile + return_value  # function for value iteration
-        # at the end of an iteration we update V and count
-        V = sum([sum(i)for i in grid])
-    print(count)
+                    if i == i_position and j == j_position:
+                        position_bestmove = bestmove
+        # at the end of an iteration we update V
+        V = sum([sum(i)for i in grid])/(rows*cols)
+        if count > 1000:
+            print("We can't find a dirty tile")
+            break
+    # print(count)
     tiles = [grid[i_position, j_position - 1], grid[i_position - 1, j_position],
              grid[i_position + 1, j_position], grid[i_position, j_position + 1]]
     bestmove = -99
@@ -47,13 +55,13 @@ def robot_epoch(robot):
         if tiles[i] > bestmove:
             bestmove = tiles[i]
             position = i  # remember, format of tiles is up, left, right, down
-    print(i)
+    # print(i)
     direction = ['n', 'w', 'e', 's'][position]
-    print(robot.orientation)
+    # print(robot.orientation)
     while robot.orientation != direction:
         robot.rotate('r')
     # print('beep')
-    print(grid)
+    # print(grid)
     robot.move()
 
 
