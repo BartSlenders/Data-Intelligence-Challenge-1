@@ -17,7 +17,6 @@ def robot_epoch(robot):
                 grid[i,j] = -1  # we consider it as a wall
             else:
                 grid[i,j] = inputgrid[i,j]
-    print(grid)
     # initialize V
     V = -999
     prev_V = -9999
