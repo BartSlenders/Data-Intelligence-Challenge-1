@@ -34,7 +34,7 @@ def robot_epoch(robot):
                 if current_tile < 0:  # if the tile is a wall or obstacle, we are never on it, so we don't update it
                     continue
                 else:  # we will check the surrounding tiles, format of tiles is up, left, right, down
-                    tiles = [grid[i,j-1], grid[i-1,j], grid[i+1, j], grid[i,j+1]]
+                    tiles = [inputgrid[i,j-1], inputgrid[i-1,j], inputgrid[i+1, j], inputgrid[i,j+1]]
                     bestmove = max(tiles)
                     return_value = bestmove * gamma**count
                     grid[i,j] = current_tile + return_value  # function for value iteration
