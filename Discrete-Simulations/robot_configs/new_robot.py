@@ -1,7 +1,8 @@
 import numpy as np
 import random
 
-def robot_epoch(robot, gamma = 0.3, theta = 3):
+
+def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -17,8 +18,8 @@ def robot_epoch(robot, gamma = 0.3, theta = 3):
                 V[i,j] = -1  # we consider it as a wall
             else:
                 V[i,j] = inputgrid[i,j]
-    correctprob = 0.8
-    wrongprob = 1 - correctprob
+
+    wrongprob = 1 - certainty
     # initialize V
     delta = -999
     prev_delta = -9999
@@ -38,7 +39,7 @@ def robot_epoch(robot, gamma = 0.3, theta = 3):
                     tiles = [i if i > 0 else 0 for i in tiles]
                     bestmove = max(tiles)
                     wrongmove = (sum(tiles)-bestmove)/3
-                    return_value = bestmove * correctprob + wrongmove * wrongprob
+                    return_value = bestmove * certainty + wrongmove * wrongprob
                     V_value = return_value * gamma**count
                     V[i,j] = current_tile + V_value# function for value iteration
                     if i == i_position and j == j_position:

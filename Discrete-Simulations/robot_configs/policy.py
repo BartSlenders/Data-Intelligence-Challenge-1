@@ -1,7 +1,8 @@
 import numpy as np
+import random
 
 
-def robot_epoch(robot, gamma=0.9, theta=0.001, certainty=0.8):
+def robot_epoch(robot, gamma=0.9, theta=0.01, certainty=0.8):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -15,52 +16,35 @@ def robot_epoch(robot, gamma=0.9, theta=0.001, certainty=0.8):
                 r[i, j] = -1  # we consider it as a wall
             else:
                 r[i, j] = inputgrid[i, j]
+    print(inputgrid)
+    # 0 up, 1 right, 2 down, 3 left
+    policy = np.random.randint(0, 4, size=(cols, rows))
+    v_values = r
 
-    # 1 up, 2 right, 3 down, 4 left
-    policy = np.random.randint(1, 5, size=(cols, rows))
-    v_values = np.zeros((cols, rows))
-
-    delta = 999999
-    iteration = 0
+    value_V = 0
 
     policy_stable = False
     while not policy_stable:
-
+        iteration = 0
+        delta = 999999
         while delta >= theta:
-            iteration = 1
-            delta = 0
+            iteration += 1
             for i in range(cols):
                 for j in range(rows):
                     if r[i, j] < 0:  # if the tile is a wall or obstacle, we are never on it, so we don't update it
                         continue
-
-                    v = v_values[i, j]
+                    tiles = [v_values[i, j - 1], v_values[i + 1, j], v_values[i, j + 1], v_values[i - 1, j]]
+                    tiles = [i if i > 0 else 0 for i in tiles]
                     choice = policy[i, j]
-                    if choice == 1:
-                        v_values[i, j] = certainty * (v_values[i, j - 1] * gamma ** iteration + r[i, j]) + (
-                                1 - certainty) / 3 * \
-                                         (r[i, j] * 3 + gamma ** iteration *
-                                          (v_values[i, j + 1] + v_values[i - 1, j] + v_values[i + 1, j]))
+                    correctmove = tiles[choice]
+                    wrongmove = (sum(tiles) - correctmove) / 3
+                    return_value = correctmove * certainty + wrongmove * (1 - certainty)
+                    V_value = return_value * gamma ** iteration
+                    v_values[i, j] = v_values[i, j] + V_value  # function for value iteration
 
-                    elif choice == 2:
-                        v_values[i, j] = certainty * (v_values[i + 1, j] * gamma ** iteration + r[i, j]) + \
-                                         (1 - certainty) / 3 * \
-                                         (r[i, j] * 3 + gamma ** iteration * (
-                                                 v_values[i, j + 1] + v_values[i - 1, j] + v_values[i, j - 1]))
-
-                    elif choice == 3:
-                        v_values[i, j] = certainty * (v_values[i, j + 1] * gamma ** iteration + r[i, j]) + \
-                                         (1 - certainty) / 3 * \
-                                         (r[i, j] * 3 + gamma ** iteration * (
-                                                 v_values[i, j - 1] + v_values[i - 1, j] + v_values[i + 1, j]))
-
-                    elif choice == 4:
-                        v_values[i, j] = certainty * (v_values[i - 1, j] * gamma ** iteration + r[i, j]) + \
-                                         (1 - certainty) / 3 * \
-                                         (r[i, j] * 3 + gamma ** iteration * (
-                                                 v_values[i, j + 1] + v_values[i + 1, j] + v_values[i, j - 1]))
-
-                    delta = max(delta, abs(v - v_values[i, j]))
+            prevtotalvalueV = value_V
+            value_V = sum([sum(i) for i in v_values]) / (rows * cols)
+            delta = abs(value_V - prevtotalvalueV)
 
         # print(v_values)
         policy_stable = True
@@ -69,43 +53,24 @@ def robot_epoch(robot, gamma=0.9, theta=0.001, certainty=0.8):
                 if r[i, j] < 0:  # if the tile is a wall or obstacle, we are never on it, so we don't update it
                     continue
 
+                tiles = [v_values[i, j - 1], v_values[i + 1, j], v_values[i, j + 1], v_values[i - 1, j]]
+                tiles = [i if i > 0 else 0 for i in tiles]
                 action = policy[i, j]
-                actions = []
-                up = certainty * (v_values[i, j - 1] * gamma ** iteration + r[i, j]) + (1 - certainty) / 3 * \
-                     (r[i, j] * 3 + gamma ** iteration *
-                      (v_values[i, j + 1] + v_values[i - 1, j] + v_values[i + 1, j]))
-                actions.append(up)
-
-                right = certainty * (v_values[i + 1, j] * gamma ** iteration + r[i, j]) + \
-                        (1 - certainty) / 3 * \
-                        (r[i, j] * 3 + gamma ** iteration * (
-                                v_values[i, j + 1] + v_values[i - 1, j] + v_values[i, j - 1]))
-                actions.append(right)
-
-                down = certainty * (v_values[i, j + 1] * gamma ** iteration + r[i, j]) + \
-                       (1 - certainty) / 3 * \
-                       (r[i, j] * 3 + gamma ** iteration * (
-                               v_values[i, j - 1] + v_values[i - 1, j] + v_values[i + 1, j]))
-                actions.append(down)
-
-                left = certainty * (v_values[i - 1, j] * gamma ** iteration + r[i, j]) + \
-                       (1 - certainty) / 3 * \
-                       (r[i, j] * 3 + gamma ** iteration * (
-                               v_values[i, j + 1] + v_values[i + 1, j] + v_values[i, j - 1]))
-                actions.append(left)
-
-                max_action = np.argmax(actions) + 1
-
+                max_action = np.argmax(tiles)
                 policy[i, j] = max_action
 
                 if action != max_action:
                     policy_stable = False
 
-                # if policy_stable == True:
-                #     print(i, j, actions, v_values[i,j+1], v_values[i+1,j])
-
-    direction = ['n', 'e', 's', 'w'][policy[i_position, j_position] - 1]
+    print(policy[i_position, j_position])
+    direction = ['n', 'e', 's', 'w'][policy[i_position, j_position]]
     # print(direction)
     while robot.orientation != direction:
         robot.rotate('r')
-    robot.move()
+    if random.randint(1, 5) != 1:
+        print('correct')
+        robot.move()
+    else:
+        for i in range(random.randint(1, 3)):
+            robot.rotate('r')
+        robot.move()
