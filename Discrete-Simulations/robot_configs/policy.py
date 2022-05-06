@@ -16,7 +16,7 @@ def robot_epoch(robot, gamma=0.6, theta=0.001, certainty=0.8):
             else:
                 r[i, j] = inputgrid[i, j]
 
-    # 1 up, 2 right, 3 down, 4 left
+    # 0 up, 1 right, 2 down, 3 left
     policy = np.random.randint(0, 4, size=(cols, rows))
     V = np.zeros((cols, rows))
 
