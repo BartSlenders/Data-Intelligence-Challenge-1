@@ -33,13 +33,12 @@ def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
                 else:  # we will check the surrounding tiles, format of tiles is up, left, right, down
                     old_v = V[i, j]
                     tiles = [V[i, j - 1], V[i - 1, j], V[i + 1, j], V[i, j + 1]]
-                    tiles = [i if i > 0 else 0 for i in tiles]
-                    bestmove = max(tiles)
-                    wrongmove = (sum(tiles) - bestmove) / 3
-                    V[i, j] = certainty * (bestmove * gamma + r[i, j]) + \
-                            (1 - certainty) * (wrongmove * gamma + r[i, j])
+                    best_move = max(tiles)
+                    wrong_move = (sum(tiles) - best_move) / 3
+                    V[i, j] = certainty * (best_move * gamma + r[i, j]) + \
+                            (1 - certainty) * (wrong_move * gamma + r[i, j])
                     if i == i_position and j == j_position:
-                        position_bestmove = bestmove
+                        position_bestmove = best_move
                     delta = max(delta, abs(old_v - V[i, j]))
         if count > 1000:
             print("We can't find a dirty tile")
@@ -47,10 +46,10 @@ def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
     # print(count)
     tiles = [V[i_position, j_position - 1], V[i_position - 1, j_position],
              V[i_position + 1, j_position], V[i_position, j_position + 1]]
-    bestmove = -99
+    best_move = -99
     for i in range(4):
-        if tiles[i] > bestmove:
-            bestmove = tiles[i]
+        if tiles[i] > best_move:
+            best_move = tiles[i]
             position = i  # remember, format of tiles is up, left, right, down
     direction = ['n', 'w', 'e', 's'][position]
 
