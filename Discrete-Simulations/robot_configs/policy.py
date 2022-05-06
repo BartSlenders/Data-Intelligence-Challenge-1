@@ -43,7 +43,6 @@ def robot_epoch(robot, gamma=0.6, theta=0.001, certainty=0.8):
 
                     delta = max(delta, abs(old_v - V[i, j]))
 
-        # print(V)
         policy_stable = True
         for i in range(cols):
             for j in range(rows):
@@ -62,7 +61,6 @@ def robot_epoch(robot, gamma=0.6, theta=0.001, certainty=0.8):
                     policy_stable = False
 
     direction = ['n', 'e', 's', 'w'][policy[i_position, j_position]]
-    # print(direction)
     while robot.orientation != direction:
         robot.rotate('r')
     robot.move()

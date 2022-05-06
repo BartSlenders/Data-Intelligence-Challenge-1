@@ -18,11 +18,10 @@ def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
                 r[i, j] = inputgrid[i, j]
     V = np.zeros((cols, rows))
 
-
-    delta = 9999
+    delta = theta
     count = 0
     position_bestmove = -99
-    while delta > theta or position_bestmove <= 0:  # if V doesn't change, we stop
+    while delta >= theta or position_bestmove <= 0:  # if V doesn't change, we stop
         delta = 0
         # we start by looping over all tiles
         for i in range(cols):
