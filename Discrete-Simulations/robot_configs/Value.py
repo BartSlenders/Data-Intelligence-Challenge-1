@@ -48,7 +48,6 @@ def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
     tiles = [V[i_position, j_position - 1], V[i_position - 1, j_position],
              V[i_position + 1, j_position], V[i_position, j_position + 1]]
     bestmove = -99
-    print(tiles)
     for i in range(4):
         if tiles[i] > bestmove:
             bestmove = tiles[i]
