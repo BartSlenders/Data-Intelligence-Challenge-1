@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def robot_epoch(robot, gamma=0.9, theta=0.001, certainty=0.8):
+def robot_epoch(robot, gamma=0.6, theta=0.001, certainty=0.8):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
