@@ -4,6 +4,9 @@ from robot_configs.policy import robot_epoch
 import pickle
 from environment import Robot
 import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import pandas as pd
 
 grid_file = 'house.grid'
 # Cleaned tile percentage at which the room is considered 'clean':
@@ -15,8 +18,11 @@ n_moves = []
 deaths = 0
 cleaned = []
 
+
+
+
 # Run 100 times:
-for i in range(100):
+for i in range(10):
     # Open the grid file.
     # (You can create one yourself using the provided editor).
     with open(f'grid_configs/{grid_file}', 'rb') as f:
@@ -54,15 +60,3 @@ for i in range(100):
     n_moves.append(len(robot.history[0]))
     cleaned.append(clean_percent)
 
-# Make some plots:
-plt.hist(cleaned)
-plt.title('Percentage of tiles cleaned.')
-plt.xlabel('% cleaned')
-plt.ylabel('count')
-plt.show()
-
-plt.hist(efficiencies)
-plt.title('Efficiency of robot.')
-plt.xlabel('Efficiency %')
-plt.ylabel('count')
-plt.show()

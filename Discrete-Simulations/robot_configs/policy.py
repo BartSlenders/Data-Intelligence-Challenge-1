@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def robot_epoch(robot, gamma=0.6, theta=0.001, certainty=0.8):
+def robot_epoch(robot, gamma=0.95, theta=0.001, certainty=0.255):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -51,7 +51,7 @@ def robot_epoch(robot, gamma=0.6, theta=0.001, certainty=0.8):
 
                 tiles = [V[i, j - 1], V[i + 1, j], V[i, j + 1], V[i - 1, j]]
                 actions = [certainty * (move * gamma + r[i, j]) +
-                           (1 - certainty) * ((sum(tiles) - move) * gamma + r[i, j]) for move in tiles]
+                           (1 - certainty) * ((sum(tiles) - move)/3 * gamma + r[i, j]) for move in tiles]
 
                 best_action = np.argmax(actions)
                 prev_action = policy[i, j]

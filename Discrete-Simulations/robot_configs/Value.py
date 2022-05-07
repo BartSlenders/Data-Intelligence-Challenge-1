@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 
-def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
+def robot_epoch(robot, gamma=0.95, theta=0.001, certainty=0.255):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -54,9 +54,9 @@ def robot_epoch(robot, gamma=0.3, theta=3, certainty=0.8):
 
     while robot.orientation != direction:
         robot.rotate('r')
-    if random.randint(1, 5) != 1:
-        robot.move()
-    else:
-        for i in range(random.randint(1, 3)):
-            robot.rotate('r')
-        robot.move()
+    # if random.randint(1, 5) != 1:
+    robot.move()
+    # else:
+    #     for i in range(random.randint(1, 3)):
+    #         robot.rotate('r')
+    #     robot.move()
