@@ -1,5 +1,4 @@
 # Import our robot algorithm to use in this simulation:
-#from robot_configs.greedy_random_robot import robot_epoch
 from robot_configs.Value import robot_epoch
 import pickle
 from environment import Robot
@@ -8,13 +7,18 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
-grid_file = 'house.grid'
+
 # Cleaned tile percentage at which the room is considered 'clean':
 stopping_criteria = 100
 
 
-
-def run(g=0.9, t=0.1, c=0.9):
+"""
+    Executes a run of Value iteration. 
+    @g: the gamma parameter
+    @t: the theta parameter
+    @c: the certainty used for policy iteration 
+"""
+def run(g=0.9, t=0.1, c=0.9, grid_file = 'house.grid'):
     deaths = 0
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -23,7 +27,7 @@ def run(g=0.9, t=0.1, c=0.9):
     # Calculate the total visitable tiles:
     n_total_tiles = (grid.cells >= 0).sum()
     # Spawn the robot at (1,1) facing north with battery drainage enabled:
-    robot = Robot(grid, (1, 1), orientation='n', battery_drain_p=0.5, battery_drain_lam=2)
+    robot = Robot(grid, (1, 1), orientation='n', battery_drain_p=1, battery_drain_lam=0.5)
     # Keep track of the number of robot decision epochs:
     n_epochs = 0
     while True:
@@ -50,7 +54,14 @@ def run(g=0.9, t=0.1, c=0.9):
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-def plotDistribution(g=0.925, t=0.001, c=0.251):
+"""
+    Plots violin plots representing the distribution of cleanliness and efficiency
+     of 10 consecutive runs of Policy iteration. 
+    @g: the gamma parameter
+    @t: the theta parameter
+    @c: the certainty used for policy iteration 
+"""
+def plotDistribution(g=0.8, t=0.001, c=0.3):
     cleaned = []
     efficiencies = []
     for i in range(100):
@@ -60,11 +71,17 @@ def plotDistribution(g=0.925, t=0.001, c=0.251):
     my_array = np.array([cleaned, efficiencies]).T
     df = pd.DataFrame(my_array, columns = ['cleaned','efficiencies'])
     ax =sns.violinplot(data=df)
-    ax.set_ylabel("performance (%)")
+    ax.set_ylabel("value iteration performance (%)")
     ax.set_title("distribution of robot performance", size=18, weight='bold');
     plt.show()
 
-
+"""
+    Plots violin plots representing the distribution of cleanliness of 10 consecutive runs of Policy iteration on
+     multiple grids. 
+    @g: the gamma parameter
+    @t: the theta parameter
+    @c: the certainty used for policy iteration 
+"""
 def generate_results(gamma, theta, certainty):
     rows = []
     for g in gamma:
@@ -75,20 +92,40 @@ def generate_results(gamma, theta, certainty):
                     rows.append([g, t, c, cleaned, efficiency])
     my_array = np.array(rows)
     df = pd.DataFrame(my_array, columns=['gamma', 'theta', 'certainty', 'cleaned', 'efficiency'])
-    df.to_csv("results6V.csv")
+    df.to_csv("results7V.csv")
+
+"""
+    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
+    of policy iteration, together with the parameters used.
+    @gamma: the gamma parameter
+    @theta: the theta parameter
+    @ccertainty: the certainty used for policy iteration 
+"""
+def plotcleanness(g=0.8, t=0.001, c=0.3):
+    grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
+    grid_files_names = ["death", "house", "random-house-3", "snake"]
+    array = []
+    for gf in grid_files:
+        cleaned = []
+        for i in range(1):
+            cleaned_a, efficiency = run(g=g, t=t, c=c, grid_file=gf)
+            cleaned.append(cleaned_a)
+        array.append(cleaned)
+
+    my_array = np.array(array).T
+    df = pd.DataFrame(my_array, columns = grid_files_names)
+    ax =sns.violinplot(data=df)
 
 
-theta = np.array([0.01, 0.05, 0.1, 0.5, 1, 5])
+    ax.set_ylabel("cleanness (%)")
+    ax.set_title("policy iteration - cleanness vs grid", size=18, weight='bold');
+    plt.show()
+
+theta = np.array([0.001])
 gamma = np.array([0.5, 0.6, 0.7, 0.8, 0.9, 0.99])
-certainty = np.array([0.5, 0.6, 0.7, 0.8, 0.9, 1])
+certainty = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
 
-theta = np.array([0.001])
-gamma = np.array([0.9, 0.925, 0.95, 0.99])
-certainty = np.array([0.255, 0.28, 0.3, 0.35])
 
-theta = np.array([0.001])
-gamma = np.array([0.92, 0.925, 0.93, 0.94, 0.95, 0.96])
-certainty = np.array([0.2501, 0.2505, 0.251, 0.255, 0.265, 0.28])
-
-# generate_results(gamma, theta, certainty)
+generate_results(gamma, theta, certainty)
 plotDistribution()
+plotcleanness()
