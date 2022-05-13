@@ -35,19 +35,19 @@ def robot_epoch(robot):
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
     i_position, j_position = robot.pos
+    print(robot.orientation)
     filthy_tiles = 0
-    r_values = np.zeros((cols, rows))
-    for i in range(cols):
-        for j in range(rows):
-            current_tile = inputgrid[i, j]
-            if current_tile < -2:  # if the robot is on the tile
-                r_values[i, j] = 0  # we consider the tile clean
-            elif current_tile == 3:  # if the tile is a death tile
-                r_values[i, j] = -1  # we consider it as a wall
+    r_values = np.zeros((rows, cols))
+    for i in range(rows):
+        for j in range(cols):
+            current_tile = inputgrid[j, i]
+            if current_tile < -2 or current_tile == 0:  # if the robot is on the tile or the tile is clean
+                r_values[i, j] = -0.1  # we consider the tile clean
+            elif current_tile == 3 or current_tile < 0:  # if the tile is a death tile, wall or obstacle
+                r_values[i, j] = -100  # we consider it as a wall
             else:
-                r_values[i, j] = current_tile
-                if current_tile > 0:
-                    filthy_tiles += 1
+                r_values[i, j] = 1
+                filthy_tiles += 1
 
     q_values = np.zeros((rows, cols, 4))  # 4 actions
     actions = ['n', 'w', 'e', 's']
@@ -67,7 +67,6 @@ def robot_epoch(robot):
         done_cleaning = False
         cleaned_tiles = 0
         while not done_cleaning:
-            count += 1
             old_row, old_column = row, col  # store the old row and column indexes
             # choose which action to take (i.e., where to move next)
             action = get_next_action(row, col, epsilon, q_values)
@@ -77,6 +76,7 @@ def robot_epoch(robot):
             reward = r[row, col]
             if reward <= -1:  # this means we hit a wall, so we need to make a different move, shouldn't happen often
                 continue
+            count += 1
             old_q_value = q_values[old_row, old_column, action]
             temporal_difference = reward + (gamma * np.max(q_values[row, col])) - old_q_value
             # update the Q-value for the previous state and action pair
@@ -84,17 +84,18 @@ def robot_epoch(robot):
             q_values[old_row, old_column, action] = new_q_value
             if reward == 1:
                 count = 0
-                r[row, col] = 0
+                r[row, col] = -0.1
                 cleaned_tiles += 1
                 if cleaned_tiles == filthy_tiles:
                     done_cleaning = True
             elif count > max_steps:
+                print('are we moving into a fucking wall again?')
                 break
-    action = get_next_action(j_position, i_position, epsilon, q_values)
+    action = get_next_action(i_position, j_position, 1, q_values)
     direction = actions[action]
     while robot.orientation != direction:
         robot.rotate('r')
-    print('move')
+    print(q_values)
     robot.move()
 
 
