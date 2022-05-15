@@ -1,8 +1,10 @@
 import numpy as np
 import random
+INIT = True
 
 
 def robot_epoch(robot, gamma=0.8, theta=0.001, certainty=0.3):
+    global INIT
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -16,24 +18,26 @@ def robot_epoch(robot, gamma=0.8, theta=0.001, certainty=0.3):
                 r[i, j] = -1  # we consider it as a wall
             else:
                 r[i, j] = inputgrid[i, j]
-    # (Create array with rewards per tile)
+
     # Initialise random policy
-    policy = np.zeros((cols, rows))
-    tiles = [rows][cols]
-    for i in range(cols):
-        for j in range(rows):
-            if r[i, j] < 0:  # if the tile is a wall or obstacle, we don't assign an action
-                continue
-            else:  # we will check the surrounding tiles
-                if r[i, j - 1] == 0 or 1:
-                    tiles[i][j].append('n')
-                if r[i - 1, j] == 0 or 1:
-                    tiles[i][j].append('w')
-                if r[i + 1, j] == 0 or 1:
-                    tiles[i][j].append('e')
-                if r[i, j + 1] == 0 or 1:
-                    tiles[i][j].append('s')
-                policy[i][j] = (random.choice(tiles[i][j]), 0)
+    if INIT:
+        policy = np.zeros((cols, rows))
+        tiles = [rows][cols]
+        for i in range(cols):
+            for j in range(rows):
+                if r[i, j] < 0:  # if the tile is a wall or obstacle, we don't assign an action
+                    continue
+                else:  # we will check the surrounding tiles
+                    if r[i, j - 1] == 0 or 1:
+                        tiles[i][j].append('n')
+                    if r[i - 1, j] == 0 or 1:
+                        tiles[i][j].append('w')
+                    if r[i + 1, j] == 0 or 1:
+                        tiles[i][j].append('e')
+                    if r[i, j + 1] == 0 or 1:
+                        tiles[i][j].append('s')
+                    policy[i][j] = (random.choice(tiles[i][j]), 0)
+        INIT = False
 
     for x in range(3):
         # Select random action from state
@@ -57,7 +61,8 @@ def robot_epoch(robot, gamma=0.8, theta=0.001, certainty=0.3):
 
         for state in states_seen:
             # Store return values in Q list
-            Q_list[state[0]][state[1]][policy[i][j]].append(calc_return(state, discount)) #TODO implement function for return value's using discount factor
+            Q_list[state[0]][state[1]][policy[i][j]].append(calc_return(state, discount))
+            #TODO implement function for return value's using discount factor
 
     # Take averages of Q list and update policy greedily
     for i in range(cols):
