@@ -15,23 +15,23 @@ def get_next_action(current_row, current_col, epsilon, q_values):
     # if a randomly chosen value between 0 and 1 is less than epsilon,
     # then choose the most promising value from the Q-table for this state.
     if np.random.random() < epsilon:
-        return np.argmax(q_values[current_row][current_col])
+        return np.argmax(q_values[current_row, current_col])
     else:  # choose a random action
         return np.random.randint(4)
 
 
-def take_action(action, r, i_position, j_position):
+def take_action(action, r, row, col):
     """
     Return the new position and the reward of taking action in the current position
     :param action: the action for the current position
     :param r: a reward 2D array
-    :param i_position: the x coordinate of the state
-    :param j_position: the y coordinate of the state
+    :param row: the x coordinate of the state
+    :param col: the y coordinate of the state
     :returns new_i, new_j, reward: coordinates of next state and its reward
     """
     # possible new coordinates direction = ['n', 'e', 's', 'w']
-    new_coordinates = [(i_position, j_position - 1), (i_position + 1, j_position),
-                       (i_position, j_position + 1), (i_position - 1, j_position)]
+    new_coordinates = [(row, col - 1), (row , col + 1),
+                       (row + 1, col), (row - 1, col)]
     new_i, new_j = new_coordinates[action]
     # get new reward
     reward = r[new_i, new_j]
@@ -39,8 +39,8 @@ def take_action(action, r, i_position, j_position):
     # check if we can move to the new location
     if reward < 0:
         # if we have a wall/obstacle don't update location
-        reward = r[i_position, j_position]
-        return i_position, j_position, reward
+        # reward = r[i_position, j_position]
+        return row, col, reward
     else:
         return new_i, new_j, reward
 
@@ -58,7 +58,7 @@ def take_action(action, r, i_position, j_position):
 #         return current_row, current_col - 1
 
 
-def robot_epoch(robot, gamma=0.9):
+def robot_epoch(robot, gamma=0.5):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -83,7 +83,7 @@ def robot_epoch(robot, gamma=0.9):
     # run through 200 training episodes
     for episode in range(200):
         # get the starting location for this episode
-        row, col = robot.pos
+        col, row = robot.pos
         count = 0
         r = np.copy(r_values)
         done_cleaning = False
@@ -112,12 +112,12 @@ def robot_epoch(robot, gamma=0.9):
             elif count > max_steps:
                 # print('reached max steps without any gain')
                 break
-    action = get_next_action(robot.pos[0], robot.pos[1], 1, q_values)
+    action = get_next_action(robot.pos[1], robot.pos[0], 1, q_values)
     direction = ['n', 'e', 's', 'w'][action]
     print('we want to move in direction', direction)
     while robot.orientation != direction:
         robot.rotate('r')
-    print(q_values[robot.pos[0], robot.pos[1]])
+    print(q_values[robot.pos[1], robot.pos[0]])
     robot.move()
 
     # Q(st, at) ← Q(st, at) + α[rt + γ max_a Q(st+1, a) − Q(st, at)]
