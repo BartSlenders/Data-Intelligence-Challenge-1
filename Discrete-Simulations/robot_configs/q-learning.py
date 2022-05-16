@@ -14,10 +14,10 @@ import numpy as np
 def get_next_action(current_row, current_col, epsilon, q_values):
     # if a randomly chosen value between 0 and 1 is less than epsilon,
     # then choose the most promising value from the Q-table for this state.
-    if np.random.random() < epsilon:
+    if np.random.uniform(0, 1) < epsilon:
         return np.argmax(q_values[current_row, current_col])
     else:  # choose a random action
-        return np.random.randint(4)
+        return np.random.randint(0, 4)
 
 
 def take_action(action, r, row, col):
@@ -58,7 +58,7 @@ def take_action(action, r, row, col):
 #         return current_row, current_col - 1
 
 
-def robot_epoch(robot, gamma=0.5):
+def robot_epoch(robot, gamma=0.9):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
