@@ -22,6 +22,28 @@ def init_rewards(rows, cols, inputgrid):
     return r
 
 
+def alternate_init_rewards(rows, cols, inputgrid):
+    """
+    Return a 2D reward array for each cell based on the type of the cell
+    :param rows: # of rows in inputgrid
+    :param cols: # of columns in inputgrid
+    :param inputgrid: a 2D array, where each cell holds the type of the corresponding tile
+    :returns r: a reward 2D array
+    """
+    r = np.zeros((cols, rows))
+    for i in range(cols):
+        for j in range(rows):
+            current_tile = inputgrid[i, j]
+            if current_tile < -2 or current_tile == 0:  # if the robot is on the tile or the tile is clean
+                r[i, j] = -0.1  # we consider the tile clean
+            elif current_tile == 3 or current_tile < 0:  # if the tile is a death tile, wall or obstacle
+                r[i, j] = -10  # we consider it as a wall
+            else:  # clean or goal tiles keep their original values of 1 and 3
+                r[i, j] = current_tile
+
+    return r
+
+
 def get_action(Q, epsilon, i_position, j_position):
     """
     Return an action for the current position using policy derived from Q (epsilon-greedy)
@@ -65,15 +87,6 @@ def take_action(action, r, i_position, j_position):
         return new_i, new_j, reward
 
 
-# def get_available_position(r):
-#     positions = []
-#     for i in range(len(r)):
-#         for j in range(len(r[0])):
-#             if r[i, j] >= 0:
-#                 positions.append((i, j))
-#     return positions
-
-
 def robot_epoch(robot, gamma=0.5, epsilon=0.1, alpha=0.5):
     """
     Execute SARSA algorithm to find the best move
@@ -89,7 +102,7 @@ def robot_epoch(robot, gamma=0.5, epsilon=0.1, alpha=0.5):
     # initialize the state-action value function with 0 for every state action pair
     Q = [[{0: 0, 1: 0, 2: 0, 3: 0} for _ in range(rows)] for _ in range(cols)]
     max_episodes = 200
-    steps = 700
+    steps = 400
 
     for _ in range(max_episodes):
         # initial state coordinates
