@@ -27,12 +27,12 @@ def robot_epoch(robot, gamma=0.8, theta=0.001, certainty=0.3):
             else:  # we will check the surrounding tiles
                 if r[i, j - 1] == 0 or 1:
                     tiles[i][j].append('n')
-                if r[i - 1, j] == 0 or 1:
-                    tiles[i][j].append('w')
                 if r[i + 1, j] == 0 or 1:
                     tiles[i][j].append('e')
                 if r[i, j + 1] == 0 or 1:
-                    tiles[i][j].append('s')
+                    tiles[i][j].append('s')    
+                if r[i - 1, j] == 0 or 1:
+                    tiles[i][j].append('w')
                 policy[i][j] = (random.choice(tiles[i][j]), 0)
 
     for x in range(3):
@@ -47,9 +47,9 @@ def robot_epoch(robot, gamma=0.8, theta=0.001, certainty=0.3):
         while True:
             # Follow policy
             if policy[i][j] == 'n': j -= 1
-            if policy[i][j] == 'w': i -= 1
             if policy[i][j] == 'e': i += 1
             if policy[i][j] == 's': j += 1
+            if policy[i][j] == 'w': i -= 1          
             next_state = (i, j)
             if next_state in states_seen:
                 break
@@ -62,7 +62,7 @@ def robot_epoch(robot, gamma=0.8, theta=0.001, certainty=0.3):
     # Take averages of Q list and update policy greedily
     for i in range(cols):
         for j in range(rows):
-            for a in ['n', 'w', 'e', 's']:
+            for a in ['n', 'e', 's', 'w']:
                 if np.mean(Q_list[i][j][a]) > calc_return((i,j), discount):
                     policy[i][j] = a
 
