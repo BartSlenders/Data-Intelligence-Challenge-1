@@ -31,6 +31,24 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
                 r[i, j] = inputgrid[i, j]
 
     # Initialise random policy
+
+    policy = np.zeros((cols, rows))
+    tiles = [rows][cols]
+    for i in range(cols):
+        for j in range(rows):
+            if r[i, j] < 0:  # if the tile is a wall or obstacle, we don't assign an action
+                continue
+            else:  # we will check the surrounding tiles
+                if r[i, j - 1] == 0 or 1:
+                    tiles[i][j].append('n')
+                if r[i + 1, j] == 0 or 1:
+                    tiles[i][j].append('e')
+                if r[i, j + 1] == 0 or 1:
+                    tiles[i][j].append('s')    
+                if r[i - 1, j] == 0 or 1:
+                    tiles[i][j].append('w')
+                policy[i][j] = (random.choice(tiles[i][j]), 0)
+
     if INIT:
         policy = np.zeros((cols, rows))
         policy_reward = np.zeros((cols, rows))
@@ -51,6 +69,7 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
                     policy[i][j] = (random.choice(tiles[i][j]), 0)
         INIT = False
 
+
     for x in range(iterations_per_evaluation):
         # Select random action from state
         random_action = random.choice(tiles[robot.pos[0]][robot.pos[1]])
@@ -65,7 +84,9 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
             if policy[i][j] == 'n': j -= 1
             if policy[i][j] == 'e': i += 1
             if policy[i][j] == 's': j += 1
-            if policy[i][j] == 'w': i -= 1
+
+            if policy[i][j] == 'w': i -= 1          
+
             next_state = (i, j)
             if next_state in states_seen:
                 break
@@ -81,7 +102,9 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
     for i in range(cols):
         for j in range(rows):
             for a in ['n', 'e', 's', 'w']:
-                if np.mean(Q_list[i][j][a]) > policy_reward[i][j]:
+
+                if np.mean(Q_list[i][j][a]) > calc_return((i,j), discount):
+
                     policy[i][j] = a
                     policy_reward[i][j] = np.mean(Q_list[i][j][a])
 
