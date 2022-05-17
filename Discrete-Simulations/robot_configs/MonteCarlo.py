@@ -79,7 +79,7 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
         for i in range(cols):
             for j in range(rows):
                 for a in ['n', 'e', 's', 'w']:
-                    if np.mean(Q_list[i,j][a]) > Q[i][j]:
+                    if np.mean(Q_list[i, j][a]) > Q[i][j]:
                         policy[i][j] = a
                         Q[i][j] = np.mean(Q_list[i, j][a])
 
