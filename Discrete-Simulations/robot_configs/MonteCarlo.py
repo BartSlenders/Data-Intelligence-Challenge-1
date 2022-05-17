@@ -60,10 +60,10 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
                 else:  # we will check the surrounding tiles
                     if r[i, j - 1] == 0 or 1:
                         tiles[i][j].append('n')
+                    if r[i + 1, j] == 0 or 1:
+                        tiles[i][j].append('e')                        
                     if r[i - 1, j] == 0 or 1:
                         tiles[i][j].append('w')
-                    if r[i + 1, j] == 0 or 1:
-                        tiles[i][j].append('e')
                     if r[i, j + 1] == 0 or 1:
                         tiles[i][j].append('s')
                     policy[i][j] = (random.choice(tiles[i][j]), 0)
