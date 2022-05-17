@@ -31,49 +31,51 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
     # Initialise random policy
     policy = np.full((cols, rows), 'x')
     Q = np.zeros((cols, rows))
-    actions_per_state = np.full((cols, rows), [])
-    for i in range(cols):
-        for j in range(rows):
+    actions_per_state = np.full((cols, rows), None)
+    for i in range(1,cols-1):
+        for j in range(1,rows-1):
             actions = []
-            if r[i, j] < 0:  # if the tile is a wall or obstacle, we don't assign an action
-                continue
-            else:  # we will check the surrounding tiles
-                if r[i, j - 1] == 0 or 1:
-                    actions.append('n')
-                if r[i - 1, j] == 0 or 1:
-                    actions.append('w')
-                if r[i + 1, j] == 0 or 1:
-                    actions.append('e')
-                if r[i, j + 1] == 0 or 1:
-                    actions.append('s')
-                policy[i][j] = (random.choice(actions))
-                actions_per_state[i, j] = actions
+            # we will check the surrounding tiles
+            if r[i, j - 1] == 0 or r[i, j - 1] == 1:
+                actions.append('n')
+            if r[i + 1, j] == 0 or r[i + 1, j] == 1:
+                actions.append('e')
+            if r[i, j + 1] == 0 or r[i, j + 1] == 1:
+                actions.append('s')
+            if r[i - 1, j] == 0 or r[i - 1, j] == 1:
+                actions.append('w')
+            policy[i][j] = (random.choice(actions))
+            actions_per_state[i, j] = actions
 
     for evaluations in range(epochs):
+        j, i = robot.pos
         for x in range(iterations_per_evaluation):
             # Select random action from state
-            random_action = random.choice(actions_per_state[robot.pos[0], robot.pos[1]])
+            random_action = random.choice(actions_per_state[i, j])
             stuck = False
             # Keep track of return value for each state-action combination
             Q_list = np.full((cols, rows), {'n': 0, 'e': 0, 's': 0, 'w': 0})
-            i, j = robot.pos
             policy[i][j] = random_action
             states_seen = [(i, j)]
-            while True:
+            while not stuck:
                 # Follow policy
-                if policy[i][j] == 'n': j -= 1
-                if policy[i][j] == 'e': i += 1
-                if policy[i][j] == 's': j += 1
-                if policy[i][j] == 'w': i -= 1
+                if policy[i][j] == 'n':
+                    j -= 1
+                if policy[i][j] == 'e':
+                    i += 1
+                if policy[i][j] == 's':
+                    j += 1
+                if policy[i][j] == 'w':
+                    i -= 1
                 next_state = (i, j)
-                if next_state in states_seen:
-                    break
                 states_seen.append(next_state)
+                if next_state in states_seen:
+                    stuck = True
 
             # Store return values in Q list
             update_Q = calc_return(states_seen, discount, rows, cols, r)
-            for reward in update_Q:
-                Q_list[i, j][policy[i][j]] = reward[i][j]
+            for state in states_seen:
+                Q_list[state[0], state[1]][policy[state[0]][state[1]]] = update_Q[state[0]][state[1]]
 
         # Take averages of Q list and update policy greedily
         for i in range(cols):
@@ -89,7 +91,7 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
             direction = policy[robot.pos[0]][robot.pos[1]]
         else:
             # choose a random action
-            direction = np.random(['n', 'e', 's', 'w'])
+            direction = random.choice(['n', 'e', 's', 'w'])
 
         while robot.orientation != direction:
             robot.rotate('r')
