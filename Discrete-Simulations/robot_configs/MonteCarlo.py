@@ -3,10 +3,10 @@ import random
 INIT = True
 
 
-def calc_return(states):
-    updated_returns = np.zeros(rows, cols)
+def calc_return(states, discount, rows, cols, r):
+    updated_returns = np.zeros((rows, cols))
     for state in states:
-        remaining_states = states[np.argwhere(state):]
+        remaining_states = states[states.index(state):]
         remaining_states_value = 0
         for remaining_state in remaining_states:
             remaining_states_value += r[remaining_state[0]][remaining_state[1]]
@@ -32,31 +32,40 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
 
     # Initialise random policy
     if INIT:
-        policy = np.zeros((cols, rows))
-        policy_reward = np.zeros((cols, rows))
-        tiles = [rows][cols]
+        policy = np.full((cols, rows), 'x')
+        Q = np.zeros((cols, rows))
+        actions_per_state = {}
         for i in range(cols):
             for j in range(rows):
+                actions = []
                 if r[i, j] < 0:  # if the tile is a wall or obstacle, we don't assign an action
                     continue
                 else:  # we will check the surrounding tiles
                     if r[i, j - 1] == 0 or 1:
-                        tiles[i][j].append('n')
+                        actions.append('n')
                     if r[i - 1, j] == 0 or 1:
-                        tiles[i][j].append('w')
+                        actions.append('w')
                     if r[i + 1, j] == 0 or 1:
-                        tiles[i][j].append('e')
+                        actions.append('e')
                     if r[i, j + 1] == 0 or 1:
-                        tiles[i][j].append('s')
-                    policy[i][j] = (random.choice(tiles[i][j]), 0)
+                        actions.append('s')
+                    for tiles_row in actions:
+                        for tiles_col in tiles_row:
+                            actions.pop(0)
+                    policy[i][j] = (random.choice(actions))
+                    actions_per_state['eval(i)eval(j)'] = actions
         INIT = False
 
     for x in range(iterations_per_evaluation):
         # Select random action from state
-        random_action = random.choice(tiles[robot.pos[0]][robot.pos[1]])
+        random_action = random.choice(actions_per_state['eval(robot.pos[0])eval(robot.pos[1])'])
         stuck = False
         # Keep track of return value for each state-action combination
-        Q_list = np.zeros(rows, cols, 4)
+        Q_list = {}
+        for row in range(rows):
+            for col in range(cols):
+                for a in ['n', 'e', 's', 'w']:
+                    Q['eval(row)eval(col)eval(a)'] = 0
         i, j = robot.pos
         policy[i][j] = random_action
         states_seen = [(i, j)]
@@ -72,18 +81,17 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
             states_seen.append(next_state)
 
         # Store return values in Q list
-        update_Q = calc_return(states_seen, discount)
+        update_Q = calc_return(states_seen, discount, rows, cols, r)
         for reward in update_Q:
-            Q_list[i][j][policy[i][j]].append(reward[i][j])
-        #TODO implement function for return value's using discount factor
+            Q_list['eval(i)eval(j)eval(policy[i][j])'] = reward[i][j]
 
     # Take averages of Q list and update policy greedily
     for i in range(cols):
         for j in range(rows):
             for a in ['n', 'e', 's', 'w']:
-                if np.mean(Q_list[i][j][a]) > policy_reward[i][j]:
+                if np.mean(Q_list['eval(i)eval(j)eval(a)']) > Q[i][j]:
                     policy[i][j] = a
-                    policy_reward[i][j] = np.mean(Q_list[i][j][a])
+                    Q[i][j] = np.mean(Q_list['eval(i)eval(j)eval(a)'])
 
     # Take the best action corresponding to the epsilon-greedy policy
     if np.random.uniform(0, 1) < epsilon:
