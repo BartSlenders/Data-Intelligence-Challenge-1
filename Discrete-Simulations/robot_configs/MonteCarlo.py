@@ -31,7 +31,6 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
                 r[i, j] = inputgrid[i, j]
 
     # Initialise random policy
-
     policy = np.zeros((cols, rows))
     tiles = [rows][cols]
     for i in range(cols):
