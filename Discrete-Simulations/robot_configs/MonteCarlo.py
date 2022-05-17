@@ -84,7 +84,6 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3):
             if policy[i][j] == 'n': j -= 1
             if policy[i][j] == 'e': i += 1
             if policy[i][j] == 's': j += 1
-
             if policy[i][j] == 'w': i -= 1          
 
             next_state = (i, j)
