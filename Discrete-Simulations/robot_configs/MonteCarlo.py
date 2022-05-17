@@ -31,7 +31,7 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
     # Initialise random policy
     policy = np.full((cols, rows), 'x')
     Q = np.zeros((cols, rows))
-    actions_per_state = {}
+    actions_per_state = np.full((cols, rows), [])
     for i in range(cols):
         for j in range(rows):
             actions = []
@@ -46,23 +46,16 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
                     actions.append('e')
                 if r[i, j + 1] == 0 or 1:
                     actions.append('s')
-                for tiles_row in actions:
-                    for tiles_col in tiles_row:
-                        actions.pop(0)
                 policy[i][j] = (random.choice(actions))
-                actions_per_state['eval(i)eval(j)'] = actions
+                actions_per_state[i, j] = actions
 
     for evaluations in range(epochs):
         for x in range(iterations_per_evaluation):
             # Select random action from state
-            random_action = random.choice(actions_per_state['eval(robot.pos[0])eval(robot.pos[1])'])
+            random_action = random.choice(actions_per_state[robot.pos[0], robot.pos[1]])
             stuck = False
             # Keep track of return value for each state-action combination
-            Q_list = {}
-            for row in range(rows):
-                for col in range(cols):
-                    for a in ['n', 'e', 's', 'w']:
-                        Q['eval(row)eval(col)eval(a)'] = 0
+            Q_list = np.full((cols, rows), {'n': 0, 'e': 0, 's': 0, 'w': 0})
             i, j = robot.pos
             policy[i][j] = random_action
             states_seen = [(i, j)]
@@ -80,15 +73,15 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
             # Store return values in Q list
             update_Q = calc_return(states_seen, discount, rows, cols, r)
             for reward in update_Q:
-                Q_list['eval(i)eval(j)eval(policy[i][j])'] = reward[i][j]
+                Q_list[i, j][policy[i][j]] = reward[i][j]
 
         # Take averages of Q list and update policy greedily
         for i in range(cols):
             for j in range(rows):
                 for a in ['n', 'e', 's', 'w']:
-                    if np.mean(Q_list['eval(i)eval(j)eval(a)']) > Q[i][j]:
+                    if np.mean(Q_list[i,j][a]) > Q[i][j]:
                         policy[i][j] = a
-                        Q[i][j] = np.mean(Q_list['eval(i)eval(j)eval(a)'])
+                        Q[i][j] = np.mean(Q_list[i, j][a])
 
         # Take the best action corresponding to the epsilon-greedy policy
         if np.random.uniform(0, 1) < epsilon:
