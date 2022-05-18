@@ -14,7 +14,7 @@ def calc_return(states, discount, rows, cols, r):
     return updated_returns
 
 
-def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, epochs=10):
+def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.95, epochs=1000):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -44,17 +44,17 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.3, e
                 actions.append('s')
             if r[i - 1, j] == 0 or r[i - 1, j] == 1:
                 actions.append('w')
-            policy[i][j] = (random.choice(actions))
+            policy[i][j] = random.choice(actions)
             actions_per_state[i, j] = actions
 
+    # Keep track of return value for each state-action combination
+    Q_list = np.full((cols, rows), {'n': 0, 'e': 0, 's': 0, 'w': 0})
     for evaluations in range(epochs):
-        j, i = robot.pos
         for x in range(iterations_per_evaluation):
+            j, i = robot.pos
             # Select random action from state
             random_action = random.choice(actions_per_state[i, j])
             stuck = False
-            # Keep track of return value for each state-action combination
-            Q_list = np.full((cols, rows), {'n': 0, 'e': 0, 's': 0, 'w': 0})
             policy[i][j] = random_action
             states_seen = [(i, j)]
             while not stuck:
