@@ -1,5 +1,5 @@
 # Import our robot algorithm to use in this simulation:
-from robot_configs.sarsa import robot_epoch
+from robot_configs. import robot_epoch
 import pickle
 from environment import Robot
 import matplotlib.pyplot as plt

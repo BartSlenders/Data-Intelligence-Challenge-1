@@ -87,7 +87,7 @@ def take_action(action, r, i_position, j_position):
         return new_i, new_j, reward
 
 
-def robot_epoch(robot, gamma=0.5, epsilon=0.1, alpha=0.5):
+def robot_epoch(robot, gamma=0.5, epsilon=0.1, alpha=0.5, episodes = 200, steps = 200):
     """
     Execute SARSA algorithm to find the best move
     :param robot: main actor of type Robot
@@ -101,10 +101,8 @@ def robot_epoch(robot, gamma=0.5, epsilon=0.1, alpha=0.5):
     r = init_rewards(rows, cols, inputgrid)
     # initialize the state-action value function with 0 for every state action pair
     Q = [[{0: 0, 1: 0, 2: 0, 3: 0} for _ in range(rows)] for _ in range(cols)]
-    max_episodes = 200
-    steps = 400
 
-    for _ in range(max_episodes):
+    for _ in range(episodes):
         # initial state coordinates
         i_position, j_position = robot.pos
 
