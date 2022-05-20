@@ -87,13 +87,15 @@ def take_action(action, r, i_position, j_position):
         return new_i, new_j, reward
 
 
-def robot_epoch(robot, gamma=0.5, epsilon=0.1, alpha=0.5, episodes = 200, steps = 200):
+def robot_epoch(robot, gamma=0.5, epsilon=0.2, alpha=0.6, episodes = 300, steps = 300):
     """
-    Execute SARSA algorithm to find the best move
+    Execute Q-learning algorithm to find the best move
     :param robot: main actor of type Robot
     :param gamma: discount factor
     :param epsilon: probability of taking a random action
     :param alpha: learning rate
+    :param episodes: number of episodes
+    :param steps: number of steps
     """
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows

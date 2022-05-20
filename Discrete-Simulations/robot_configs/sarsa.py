@@ -81,6 +81,8 @@ def robot_epoch(robot, gamma=0.9, epsilon=0.1, alpha=0.5, episodes = 200, steps 
     :param gamma: discount factor
     :param epsilon: probability of taking a random action
     :param alpha: learning rate
+    :param episodes: number of episodes
+    :param steps: number of steps
     """
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows

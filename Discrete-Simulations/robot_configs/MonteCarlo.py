@@ -3,7 +3,7 @@ import random
 
 
 def calc_return(states, discount, rows, cols, r):
-    updated_returns = np.zeros((rows, cols))
+    updated_returns = np.zeros((cols, rows))
     for state in states:
         remaining_states = states[states.index(state):]
         remaining_states_value = 0
@@ -14,7 +14,7 @@ def calc_return(states, discount, rows, cols, r):
     return updated_returns
 
 
-def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.95, epochs=100):
+def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.1, epochs=100):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -54,9 +54,9 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.95, 
             stuck = False
             states = []
             # Select random action from state
-            for p in range(1, rows-1):
-                for q in range(1, cols-1):
-                    if r[p][q]==1 or r[p][q]==0:
+            for p in range(1, cols-1):
+                for q in range(1, rows-1):
+                    if r[p][q]>=0:
                         states.append((p,q))
             i, j = random.choice(states)
             random_action = random.choice(actions_per_state[i, j])
@@ -90,15 +90,15 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.95, 
                         policy[i][j] = a
                         Q[i][j] = np.mean(Q_list[i, j][a])
 
-        # Take the best action corresponding to the epsilon-greedy policy
-        if np.random.uniform(0, 1) < epsilon:
-            # take the action according to the policy
-            direction = policy[robot.pos[0]][robot.pos[1]]
-        else:
-            # choose a random action
-            direction = random.choice(['n', 'e', 's', 'w'])
+    # Take the best action corresponding to the epsilon-greedy policy
+    if np.random.uniform(0, 1) < epsilon:
+        # choose a random action
+        direction = random.choice(['n', 'e', 's', 'w'])
+    else:
+        # take the action according to the policy
+        direction = policy[robot.pos[0]][robot.pos[1]]
 
-        while robot.orientation != direction:
-            robot.rotate('r')
+    while robot.orientation != direction:
+        robot.rotate('r')
 
-        robot.move()
+    robot.move()
