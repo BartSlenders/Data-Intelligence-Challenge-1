@@ -58,6 +58,8 @@ def run(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, grid_file='h
         n_revisted_tiles = len(moves) - len(u_moves)
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
+
+
 #
 #
 # """
@@ -134,12 +136,13 @@ def generate_results(gamma, epsilon, alpha, episodes, steps, runs_per_combinatio
     df = pd.DataFrame(my_array, columns=['gamma', 'epsilon', 'alpha', 'episodes', 'steps', 'cleaned', 'efficiency'])
     df.to_csv("results.csv")
 
+
 gamma = np.array([0.5, 0.7, 0.9])
 # Epsilon from epsilon-greedy
 epsilon = np.array([0.05, 0.1, 0.2])
 # Learning rate
 alpha = np.array([0.3, 0.6, 0.9])
-episodes = np.array([50, 150, 300])
-steps = np.array([50, 150, 300])
+episodes = np.array([50, 150, 300, 600])
+steps = np.array([3, 6, 12, 24, 48])
 
 generate_results(gamma, epsilon, alpha, episodes, steps)

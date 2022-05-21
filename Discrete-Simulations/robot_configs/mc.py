@@ -44,6 +44,7 @@ def take_action(action, r, i_position, j_position):
         # if we have a wall/obstacle don't update location
         return i_position, j_position, reward
     else:
+        r[new_i][new_j] = 0
         return new_i, new_j, reward
 
 
@@ -66,7 +67,7 @@ def get_action(Q, epsilon, i_position, j_position):
     return action
 
 
-def robot_epoch(robot, gamma=0.7, epsilon=0.1, episodes=300, steps=300):
+def robot_epoch(robot, gamma=0.5, epsilon=0.1, episodes=900, steps=6):
     """
     Execute MC algorithm to find the best move
     :param robot: main actor of type Robot
@@ -81,7 +82,7 @@ def robot_epoch(robot, gamma=0.7, epsilon=0.1, episodes=300, steps=300):
     r = init_rewards(rows, cols, inputgrid)
 
     # initialize the state-action value function with 0 for every state action pair
-    Q = [[{0: 0, 1: 0, 2: 0, 3: 0} for _ in range(rows)] for _ in range(cols)]
+    Q = [[{0: np.random.uniform(), 1: np.random.uniform(), 2: np.random.uniform(), 3: np.random.uniform()} for _ in range(rows)] for _ in range(cols)]
     # initialize the returns with empty list for every state action pair
     returns = [[{0: [], 1: [], 2: [], 3: []} for _ in range(rows)] for _ in range(cols)]
     x_pos, y_pos = robot.pos
@@ -104,12 +105,12 @@ def robot_epoch(robot, gamma=0.7, epsilon=0.1, episodes=300, steps=300):
     for _ in range(episodes):
         episode = []
         current_i, current_j = x_pos, y_pos
-
+        r = init_rewards(rows, cols, inputgrid)
         # generate an episode following policy
         for t in range(steps):
             action = policy[current_i][current_j]
             new_i, new_j, reward = take_action(action, r, current_i, current_j)
-            episode.append((new_i, new_j, action, reward))
+            episode.append((current_i, current_j, action, reward))
             current_i, current_j = new_i, new_j
 
         G = 0

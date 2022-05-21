@@ -1,5 +1,5 @@
 # Import our robot algorithm to use in this simulation:
-from robot_configs.MonteCarlo import robot_epoch
+from robot_configs.mc import robot_epoch
 import pickle
 from environment import Robot
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ cleaned = []
     @t: the theta parameter
     @c: the certainty used for policy iteration 
 """
-def run(ipe=5, gamma=0.8, epsilon=0.1, steps = 200, grid_file ='house.grid'):
+def run(gamma=0.9, epsilon=0.1, episodes=100, steps=100, grid_file ='house.grid'):
     deaths = 0
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -37,7 +37,7 @@ def run(ipe=5, gamma=0.8, epsilon=0.1, steps = 200, grid_file ='house.grid'):
     while True:
         n_epochs += 1
         # Do a robot epoch (basically call the robot algorithm once):
-        robot_epoch(robot, iterations_per_evaluation=ipe, gamma=gamma, epsilon=epsilon, epochs=steps)
+        robot_epoch(robot, gamma=gamma, epsilon=epsilon, episodes=episodes, steps=steps)
         # Stop this simulation instance if robot died :( :
         if not robot.alive:
             deaths += 1
@@ -108,31 +108,28 @@ def run(ipe=5, gamma=0.8, epsilon=0.1, steps = 200, grid_file ='house.grid'):
     of policy iteration, together with the parameters used.
     @gamma: the gamma parameter
 """
-def generate_results(ipe, discount, epsilon, steps, runs_per_combination=2):
+def generate_results(gamma, epsilon, episodes, steps, runs_per_combination=3):
     rows = []
 
-    for d in discount:
+    for g in gamma:
         for e in epsilon:
-            for i in ipe:
+            for i in episodes:
                 for s in steps:
-                    print('ipe:', i, '\tepochs:', s, 'gamma:', d, '\tepsilon:', e)
+                    print('gamma:', g, '\tepsilon:', e, '\tepisodes:', i, '\tsteps:', s)
                     for j in range(runs_per_combination):
-                        cleaned, efficiency = run(ipe=i, gamma=d, epsilon=e, steps=s)
-                        rows.append([i, s, d, e, cleaned, efficiency])
+                        cleaned, efficiency = run(gamma=g, epsilon=e, episodes=i, steps=s)
+                        rows.append([g, e, i, s, cleaned, efficiency])
                     print('\tcleaned:', cleaned, '\tefficiency:', efficiency)
     my_array = np.array(rows)
-    df = pd.DataFrame(my_array, columns=['ipe', 'epochs', 'gamma', 'epsilon', 'cleaned', 'efficiency'])
-    df.to_csv("results.csv")
+    df = pd.DataFrame(my_array, columns=['gamma', 'epsilon', 'episodes', 'steps', 'cleaned', 'efficiency'])
+    df.to_csv("results3.csv")
 
 
-iterations_per_evaluation = np.array([1, 5, 10])
-gammas = np.array([0.5, 0.7, 0.9])
+gamma = np.array([0.5, 0.7, 0.9])
+# Epsilon from epsilon-greedy
 epsilon = np.array([0.05, 0.1, 0.2])
-epochs = np.array([100, 200])
+# Learning rate
+episodes = np.array([15, 100, 200])
+steps = np.array([3, 10, 20, 50, 150, 300])
 
-# gammas = np.array([0.5, 0.7, 0.9])
-# epsilon = np.array([0.05, 0.1, 0.2])
-# iterations_per_evaluation = np.array([50, 150, 300])
-# epochs = np.array([50, 150, 300])
-
-generate_results(iterations_per_evaluation, gammas, epsilon, epochs)
+generate_results(gamma, epsilon, episodes, steps)
