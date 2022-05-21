@@ -114,13 +114,13 @@ def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
         for d in discount:
             for e in epsilon:
                 for s in steps:
-                    print('ipe:', i, 'discount:', d, '\tepsilon:', e, '\tsteps:', s)
+                    print('ipe:', i, 'gamma:', d, '\tepsilon:', e, '\tepochs:', s)
                     for i in range(runs_per_combination):
                         cleaned, efficiency = run(ipe=i, gamma=d, epsilon=e, steps=s)
                         rows.append([i, d, e, s, cleaned, efficiency])
                     print('\tcleaned:', cleaned, '\tefficiency:', efficiency)
     my_array = np.array(rows)
-    df = pd.DataFrame(my_array, columns=['ipe', 'd', 'epsilon', 'steps', 'cleaned', 'efficiency'])
+    df = pd.DataFrame(my_array, columns=['ipe', 'gamma', 'epsilon', 'epochs', 'cleaned', 'efficiency'])
     df.to_csv("results.csv")
 
 
