@@ -3,10 +3,6 @@
 from robot_configs.policy import robot_epoch
 import pickle
 from environment import Robot
-import matplotlib.pyplot as plt
-import numpy as np
-import seaborn as sns
-import pandas as pd
 
 grid_file = 'house.grid'
 # Cleaned tile percentage at which the room is considered 'clean':

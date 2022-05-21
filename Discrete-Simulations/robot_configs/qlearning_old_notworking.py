@@ -119,5 +119,3 @@ def robot_epoch(robot, gamma=0.9):
         robot.rotate('r')
     print(q_values[robot.pos[1], robot.pos[0]])
     robot.move()
-
-    # Q(st, at) ← Q(st, at) + α[rt + γ max_a Q(st+1, a) − Q(st, at)]
