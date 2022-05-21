@@ -110,23 +110,29 @@ def plotcleanness(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
 """
 def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
     rows = []
-    for i in ipe:
-        for d in discount:
-            for e in epsilon:
+
+    for d in discount:
+        for e in epsilon:
+            for i in ipe:
                 for s in steps:
-                    print('ipe:', i, 'gamma:', d, '\tepsilon:', e, '\tepochs:', s)
+                    print('ipe:', i, '\tepochs:', s, 'gamma:', d, '\tepsilon:', e)
                     for i in range(runs_per_combination):
                         cleaned, efficiency = run(ipe=i, gamma=d, epsilon=e, steps=s)
-                        rows.append([i, d, e, s, cleaned, efficiency])
+                        rows.append([i, s, d, e, cleaned, efficiency])
                     print('\tcleaned:', cleaned, '\tefficiency:', efficiency)
     my_array = np.array(rows)
-    df = pd.DataFrame(my_array, columns=['ipe', 'gamma', 'epsilon', 'epochs', 'cleaned', 'efficiency'])
+    df = pd.DataFrame(my_array, columns=['ipe', 'epochs', 'gamma', 'epsilon', 'cleaned', 'efficiency'])
     df.to_csv("results.csv")
 
 
-iterations_per_evaluation = np.array([1, 5, 10, 20])
-gammas = np.array([1, 0.8, 0.6, 0.4, 0])
-epsilon = np.array([0.001, 0.05, 0.1, 0.3])
-epochs = np.array([100, 200, 400, 800])
+iterations_per_evaluation = np.array([1, 5, 10])
+gammas = np.array([1, 0.8, 0.6, 0.4])
+epsilon = np.array([0.05, 0.1, 0.3])
+epochs = np.array([100, 200])
+
+# gammas = np.array([0.5, 0.7, 0.9])
+# epsilon = np.array([0.05, 0.1, 0.2])
+# iterations_per_evaluation = np.array([50, 150, 300])
+# epochs = np.array([50, 150, 300])
 
 generate_results(iterations_per_evaluation, gammas, epsilon, epochs)
