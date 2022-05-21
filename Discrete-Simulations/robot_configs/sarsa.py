@@ -65,16 +65,7 @@ def take_action(action, r, i_position, j_position):
         return new_i, new_j, reward
 
 
-# def get_available_position(r):
-#     positions = []
-#     for i in range(len(r)):
-#         for j in range(len(r[0])):
-#             if r[i, j] >= 0:
-#                 positions.append((i, j))
-#     return positions
-
-
-def robot_epoch(robot, gamma=0.9, epsilon=0.1, alpha=0.5, episodes = 200, steps = 200):
+def robot_epoch(robot, gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200):
     """
     Execute SARSA algorithm to find the best move
     :param robot: main actor of type Robot
