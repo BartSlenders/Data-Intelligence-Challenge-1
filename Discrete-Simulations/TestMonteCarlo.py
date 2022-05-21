@@ -128,8 +128,7 @@ def generate_results(gamma, epsilon, episodes, steps, runs_per_combination=3):
 gamma = np.array([0.5, 0.7, 0.9])
 # Epsilon from epsilon-greedy
 epsilon = np.array([0.05, 0.1, 0.2])
-# Learning rate
-episodes = np.array([15, 100, 200])
-steps = np.array([3, 10, 20, 50, 150, 300])
+episodes = np.array([50, 150, 300, 600])
+steps = np.array([3, 6, 12, 24, 48])
 
 generate_results(gamma, epsilon, episodes, steps)
