@@ -14,7 +14,7 @@ def calc_return(states, gamma, rows, cols, r):
     return updated_returns
 
 
-def robot_epoch(robot, iterations_per_evaluation=3, gamma=0.8, epsilon=0.1, epochs=100):
+def robot_epoch(robot, iterations_per_evaluation=100, gamma=0.8, epsilon=0.1, epochs=100):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols

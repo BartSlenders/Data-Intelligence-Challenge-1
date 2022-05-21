@@ -66,7 +66,7 @@ def get_action(Q, epsilon, i_position, j_position):
     return action
 
 
-def robot_epoch(robot, gamma=0.9, epsilon=0.1, episodes=100, steps=50):
+def robot_epoch(robot, gamma=0.7, epsilon=0.1, episodes=300, steps=300):
     """
     Execute MC algorithm to find the best move
     :param robot: main actor of type Robot

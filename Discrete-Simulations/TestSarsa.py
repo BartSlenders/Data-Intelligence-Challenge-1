@@ -58,57 +58,57 @@ def run(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, grid_file='h
         n_revisted_tiles = len(moves) - len(u_moves)
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
-
-
-"""
-    Plots violin plots representing the distribution of cleanliness and efficiency
-     of 10 consecutive runs of Policy iteration. 
-    @g: the gamma parameter
-    @t: the theta parameter
-    @c: the certainty used for policy iteration 
-"""
-
-
-def plotDistribution(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, runs=10):
-    cleaned = []
-    efficiencies = []
-    for i in range(runs):
-        cleaned_a, efficiency = run(gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
-        cleaned.append(cleaned_a)
-        efficiencies.append(efficiency)
-    my_array = np.array([cleaned, efficiencies]).T
-    df = pd.DataFrame(my_array, columns=['cleaned', 'efficiencies'])
-    ax = sns.violinplot(data=df)
-    ax.set_ylabel("iteration policy performance (%)")
-    ax.set_title("distribution of robot performance", size=18, weight='bold');
-    plt.show()
-
-
-"""
-    Plots violin plots representing the distribution of cleanliness of 10 consecutive runs of Policy iteration on
-     multiple grids. 
-    @g: the gamma parameter
-"""
-
-
-def plotcleanness(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, runs=10):
-    grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
-    grid_files_names = ["death", "house", "random-house-3", "snake"]
-    array = []
-    for gf in grid_files:
-        efficiencies = []
-        for i in range(runs):
-            cleaned_a, efficiency = run(gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
-            efficiencies.append(efficiency)
-        array.append(efficiencies)
-
-    my_array = np.array(array).T
-    df = pd.DataFrame(my_array, columns=grid_files_names)
-    ax = sns.violinplot(data=df)
-
-    ax.set_ylabel("efficiency (%)")
-    ax.set_title("policy iteration - efficiency vs grid", size=18, weight='bold');
-    plt.show()
+#
+#
+# """
+#     Plots violin plots representing the distribution of cleanliness and efficiency
+#      of 10 consecutive runs of Policy iteration.
+#     @g: the gamma parameter
+#     @t: the theta parameter
+#     @c: the certainty used for policy iteration
+# """
+#
+#
+# def plotDistribution(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, runs=10):
+#     cleaned = []
+#     efficiencies = []
+#     for i in range(runs):
+#         cleaned_a, efficiency = run(gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
+#         cleaned.append(cleaned_a)
+#         efficiencies.append(efficiency)
+#     my_array = np.array([cleaned, efficiencies]).T
+#     df = pd.DataFrame(my_array, columns=['cleaned', 'efficiencies'])
+#     ax = sns.violinplot(data=df)
+#     ax.set_ylabel("iteration policy performance (%)")
+#     ax.set_title("distribution of robot performance", size=18, weight='bold');
+#     plt.show()
+#
+#
+# """
+#     Plots violin plots representing the distribution of cleanliness of 10 consecutive runs of Policy iteration on
+#      multiple grids.
+#     @g: the gamma parameter
+# """
+#
+#
+# def plotcleanness(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, runs=10):
+#     grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
+#     grid_files_names = ["death", "house", "random-house-3", "snake"]
+#     array = []
+#     for gf in grid_files:
+#         efficiencies = []
+#         for i in range(runs):
+#             cleaned_a, efficiency = run(gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
+#             efficiencies.append(efficiency)
+#         array.append(efficiencies)
+#
+#     my_array = np.array(array).T
+#     df = pd.DataFrame(my_array, columns=grid_files_names)
+#     ax = sns.violinplot(data=df)
+#
+#     ax.set_ylabel("efficiency (%)")
+#     ax.set_title("policy iteration - efficiency vs grid", size=18, weight='bold');
+#     plt.show()
 
 
 """

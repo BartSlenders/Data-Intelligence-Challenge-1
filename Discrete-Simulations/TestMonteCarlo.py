@@ -31,7 +31,7 @@ def run(ipe=5, gamma=0.8, epsilon=0.1, steps = 200, grid_file ='house.grid'):
     # Calculate the total visitable tiles:
     n_total_tiles = (grid.cells >= 0).sum()
     # Spawn the robot at (1,1) facing north with battery drainage enabled:
-    robot = Robot(grid, (1, 1), orientation='n', battery_drain_p=1, battery_drain_lam=0.5)
+    robot = Robot(grid, (1, 1), orientation='n', battery_drain_p=1, battery_drain_lam=1)
     # Keep track of the number of robot decision epochs:
     n_epochs = 0
     while True:
@@ -58,57 +58,57 @@ def run(ipe=5, gamma=0.8, epsilon=0.1, steps = 200, grid_file ='house.grid'):
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-"""
-    Plots violin plots representing the distribution of cleanliness and efficiency
-     of 10 consecutive runs of Policy iteration. 
-    @g: the gamma parameter
-    @t: the theta parameter
-    @c: the certainty used for policy iteration 
-"""
-def plotDistribution(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
-    cleaned = []
-    efficiencies = []
-    for i in range(runs):
-        cleaned_a, efficiency = run(iterations_per_evaluation=ipe, gamma=discount, epsilon=epsilon, epochs=epochs)
-        cleaned.append(cleaned_a)
-        efficiencies.append(efficiency)
-    my_array = np.array([cleaned, efficiencies]).T
-    df = pd.DataFrame(my_array, columns = ['cleaned', 'efficiencies'])
-    ax = sns.violinplot(data=df)
-    ax.set_ylabel("iteration policy performance (%)")
-    ax.set_title("distribution of robot performance", size=18, weight='bold');
-    plt.show()
-
-"""
-    Plots violin plots representing the distribution of cleanliness of 10 consecutive runs of Policy iteration on
-     multiple grids. 
-    @g: the gamma parameter
-"""
-def plotcleanness(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
-    grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
-    grid_files_names = ["death", "house", "random-house-3", "snake"]
-    array = []
-    for gf in grid_files:
-        efficiencies = []
-        for i in range(runs):
-            cleaned_a, efficiency = run(iterations_per_evaluation=ipe, gamma=discount, epsilon=epsilon, epochs=epochs)
-            efficiencies.append(efficiency)
-        array.append(efficiencies)
-
-    my_array = np.array(array).T
-    df = pd.DataFrame(my_array, columns = grid_files_names)
-    ax =sns.violinplot(data=df)
-
-    ax.set_ylabel("efficiency (%)")
-    ax.set_title("Monte Carlo method - efficiency vs grid", size=18, weight='bold');
-    plt.show()
+# """
+#     Plots violin plots representing the distribution of cleanliness and efficiency
+#      of 10 consecutive runs of Policy iteration.
+#     @g: the gamma parameter
+#     @t: the theta parameter
+#     @c: the certainty used for policy iteration
+# """
+# def plotDistribution(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
+#     cleaned = []
+#     efficiencies = []
+#     for i in range(runs):
+#         cleaned_a, efficiency = run(iterations_per_evaluation=ipe, gamma=discount, epsilon=epsilon, epochs=epochs)
+#         cleaned.append(cleaned_a)
+#         efficiencies.append(efficiency)
+#     my_array = np.array([cleaned, efficiencies]).T
+#     df = pd.DataFrame(my_array, columns = ['cleaned', 'efficiencies'])
+#     ax = sns.violinplot(data=df)
+#     ax.set_ylabel("iteration policy performance (%)")
+#     ax.set_title("distribution of robot performance", size=18, weight='bold');
+#     plt.show()
+#
+# """
+#     Plots violin plots representing the distribution of cleanliness of 10 consecutive runs of Policy iteration on
+#      multiple grids.
+#     @g: the gamma parameter
+# """
+# def plotcleanness(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
+#     grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
+#     grid_files_names = ["death", "house", "random-house-3", "snake"]
+#     array = []
+#     for gf in grid_files:
+#         efficiencies = []
+#         for i in range(runs):
+#             cleaned_a, efficiency = run(iterations_per_evaluation=ipe, gamma=discount, epsilon=epsilon, epochs=epochs)
+#             efficiencies.append(efficiency)
+#         array.append(efficiencies)
+#
+#     my_array = np.array(array).T
+#     df = pd.DataFrame(my_array, columns = grid_files_names)
+#     ax =sns.violinplot(data=df)
+#
+#     ax.set_ylabel("efficiency (%)")
+#     ax.set_title("Monte Carlo method - efficiency vs grid", size=18, weight='bold');
+#     plt.show()
 
 """
     Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
     of policy iteration, together with the parameters used.
     @gamma: the gamma parameter
 """
-def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
+def generate_results(ipe, discount, epsilon, steps, runs_per_combination=2):
     rows = []
 
     for d in discount:
@@ -116,7 +116,7 @@ def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
             for i in ipe:
                 for s in steps:
                     print('ipe:', i, '\tepochs:', s, 'gamma:', d, '\tepsilon:', e)
-                    for i in range(runs_per_combination):
+                    for j in range(runs_per_combination):
                         cleaned, efficiency = run(ipe=i, gamma=d, epsilon=e, steps=s)
                         rows.append([i, s, d, e, cleaned, efficiency])
                     print('\tcleaned:', cleaned, '\tefficiency:', efficiency)
@@ -126,8 +126,8 @@ def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
 
 
 iterations_per_evaluation = np.array([1, 5, 10])
-gammas = np.array([1, 0.8, 0.6, 0.4])
-epsilon = np.array([0.05, 0.1, 0.3])
+gammas = np.array([0.5, 0.7, 0.9])
+epsilon = np.array([0.05, 0.1, 0.2])
 epochs = np.array([100, 200])
 
 # gammas = np.array([0.5, 0.7, 0.9])
