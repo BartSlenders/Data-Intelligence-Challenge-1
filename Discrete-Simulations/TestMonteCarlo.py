@@ -1,5 +1,5 @@
 # Import our robot algorithm to use in this simulation:
-from robot_configs.sarsa import robot_epoch
+from robot_configs.MonteCarlo import robot_epoch
 import pickle
 from environment import Robot
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ cleaned = []
     @t: the theta parameter
     @c: the certainty used for policy iteration 
 """
-def run(ipe=5, discount=0.8, epsilon=0.1, steps = 200, grid_file = 'house.grid'):
+def run(ipe=5, gamma=0.8, epsilon=0.1, steps = 200, grid_file ='house.grid'):
     deaths = 0
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -37,7 +37,7 @@ def run(ipe=5, discount=0.8, epsilon=0.1, steps = 200, grid_file = 'house.grid')
     while True:
         n_epochs += 1
         # Do a robot epoch (basically call the robot algorithm once):
-        robot_epoch(robot, iterations_per_evaluation=ipe, discount=discount, epsilon=epsilon, steps=steps)
+        robot_epoch(robot, iterations_per_evaluation=ipe, gamma=gamma, epsilon=epsilon, epochs=steps)
         # Stop this simulation instance if robot died :( :
         if not robot.alive:
             deaths += 1
@@ -69,7 +69,7 @@ def plotDistribution(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
     cleaned = []
     efficiencies = []
     for i in range(runs):
-        cleaned_a, efficiency = run(iterations_per_evaluation=ipe, discount=discount, epsilon=epsilon, epochs=epochs)
+        cleaned_a, efficiency = run(iterations_per_evaluation=ipe, gamma=discount, epsilon=epsilon, epochs=epochs)
         cleaned.append(cleaned_a)
         efficiencies.append(efficiency)
     my_array = np.array([cleaned, efficiencies]).T
@@ -91,7 +91,7 @@ def plotcleanness(robot, ipe=3, discount=0.8, epsilon=0.95, epochs=100):
     for gf in grid_files:
         efficiencies = []
         for i in range(runs):
-            cleaned_a, efficiency = run(iterations_per_evaluation=ipe, discount=discount, epsilon=epsilon, epochs=epochs)
+            cleaned_a, efficiency = run(iterations_per_evaluation=ipe, gamma=discount, epsilon=epsilon, epochs=epochs)
             efficiencies.append(efficiency)
         array.append(efficiencies)
 
@@ -116,7 +116,7 @@ def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
                 for s in steps:
                     print('ipe:', i, 'discount:', d, '\tepsilon:', e, '\tsteps:', s)
                     for i in range(runs_per_combination):
-                        cleaned, efficiency = run(ipe=i, discount=d, epsilon=e, steps=s)
+                        cleaned, efficiency = run(ipe=i, gamma=d, epsilon=e, steps=s)
                         rows.append([i, d, e, s, cleaned, efficiency])
                     print('\tcleaned:', cleaned, '\tefficiency:', efficiency)
     my_array = np.array(rows)
@@ -125,8 +125,8 @@ def generate_results(ipe, discount, epsilon, steps, runs_per_combination=3):
 
 
 iterations_per_evaluation = np.array([1, 5, 10, 20])
-discount = np.array([1, 0.8, 0.6, 0.4, 0])
+gammas = np.array([1, 0.8, 0.6, 0.4, 0])
 epsilon = np.array([0.001, 0.05, 0.1, 0.3])
-steps = np.array([100, 200, 400, 800])
+epochs = np.array([100, 200, 400, 800])
 
-generate_results(iterations_per_evaluation, discount, epsilon, steps)
+generate_results(iterations_per_evaluation, gammas, epsilon, epochs)

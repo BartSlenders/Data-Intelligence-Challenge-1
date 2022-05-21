@@ -2,19 +2,19 @@ import numpy as np
 import random
 
 
-def calc_return(states, discount, rows, cols, r):
+def calc_return(states, gamma, rows, cols, r):
     updated_returns = np.zeros((cols, rows))
     for state in states:
         remaining_states = states[states.index(state):]
         remaining_states_value = 0
         for remaining_state in remaining_states:
             remaining_states_value += r[remaining_state[0]][remaining_state[1]]
-        return_value = r[state[0]][state[1]] + discount * remaining_states_value
+        return_value = r[state[0]][state[1]] + gamma * remaining_states_value
         updated_returns[state[0]][state[1]] = return_value
     return updated_returns
 
 
-def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.1, epochs=100):
+def robot_epoch(robot, iterations_per_evaluation=3, gamma=0.8, epsilon=0.1, epochs=100):
     inputgrid = robot.grid.cells
     rows = robot.grid.n_rows
     cols = robot.grid.n_cols
@@ -78,7 +78,7 @@ def robot_epoch(robot, iterations_per_evaluation=3, discount=0.8, epsilon=0.1, e
                     stuck = True
 
             # Store return values in Q list
-            update_Q = calc_return(states_seen, discount, rows, cols, r)
+            update_Q = calc_return(states_seen, gamma, rows, cols, r)
             for state in states_seen:
                 Q_list[state[0], state[1]][policy[state[0]][state[1]]] = update_Q[state[0]][state[1]]
 
