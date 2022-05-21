@@ -91,7 +91,7 @@ def robot_epoch(robot, iterations_per_evaluation=100, gamma=0.8, epsilon=0.1, ep
                         Q[i][j] = np.mean(Q_list[i, j][a])
 
     # Take the best action corresponding to the epsilon-greedy policy
-    if np.random.uniform(0, 1) < epsilon:
+    if np.random.uniform(0, 1) > epsilon:
         # choose a random action
         direction = random.choice(['n', 'e', 's', 'w'])
     else:
