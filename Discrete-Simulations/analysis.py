@@ -8,12 +8,13 @@ from robot_configs.policy import robot_epoch as pc
 from robot_configs.Value import robot_epoch as va
 import pickle
 from environment import Robot
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
 
-
+"""
+    Generates a run on a grid using the optimal parameters of Monte-carlo
+    @grid_file: the grid used
+"""
 def runMC(gamma=0.7, epsilon=0.05, episodes=500, steps=3, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
     if grid_file == "example-random-house-3.grid":
@@ -57,7 +58,10 @@ def runMC(gamma=0.7, epsilon=0.05, episodes=500, steps=3, grid_file='house.grid'
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-
+"""
+    Generates a run on a grid using the optimal parameters of Q-learning
+    @grid_file: the grid used
+"""
 def runQL(gamma=0.5, epsilon=0.2, alpha=0.6, episodes=300, steps=300, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
     if grid_file == "example-random-house-3.grid":
@@ -101,6 +105,10 @@ def runQL(gamma=0.5, epsilon=0.2, alpha=0.6, episodes=300, steps=300, grid_file=
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
+"""
+    Generates a run on a grid using the optimal parameters of SARSA
+    @grid_file: the grid used
+"""
 
 def runSA(gamma=0.5, epsilon=0.05, alpha=0.6, episodes=300, steps=300, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
@@ -145,6 +153,10 @@ def runSA(gamma=0.5, epsilon=0.05, alpha=0.6, episodes=300, steps=300, grid_file
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
+"""
+    Generates a run on a grid using the optimal parameters of Policy iteration
+    @grid_file: the grid used
+"""
 
 def runPC(g=0.9, t=0.001, c=0.3, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
@@ -189,8 +201,14 @@ def runPC(g=0.9, t=0.001, c=0.3, grid_file='house.grid'):
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-
-def runVA(g=0.8, t=0.001, c=0.3, grid_file='house.grid'):
+"""
+    Generates a run on a grid using the optimal parameters of Value iteration
+    @grid_file: the grid used
+"""
+def runVA(grid_file='house.grid'):
+    g = 0.8
+    t = 0.001
+    c = 0.3
     # Cleaned tile percentage at which the room is considered 'clean':
     if grid_file == "example-random-house-3.grid":
         stopping_criteria = 82.5
@@ -234,6 +252,14 @@ def runVA(g=0.8, t=0.001, c=0.3, grid_file='house.grid'):
     return clean_percent, efficiency
 
 
+"""
+    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
+    of multiple grids and algorithms.
+    @grids: A list of grids
+    @runs_per_combination: how many runs are executed for each combination of algorithm and grid
+"""
+
+
 def generate_results(grids, runs_per_combination=10):
     rows = []
     for g in grids:
@@ -268,23 +294,18 @@ def generate_results(grids, runs_per_combination=10):
             print(g, "Value Iteration", "cleanliness", cleaned.astype('float'))
             rows.append([g, "Value iteration", "efficiency", efficiency.astype('float')])
             print(g, "Value Iteration", "efficiency", efficiency.astype('float'))
-    return rows
+
+    my_array = np.array(rows)
+
+    df = pd.DataFrame(my_array, columns=['grid', 'algorithm', 'measurement', 'performance'])
+    df['grid'] = df.grid.astype('category')
+    df['algorithm'] = df.algorithm.astype('category')
+    df['measurement'] = df.measurement.astype('category')
+    df['performance'] = df.performance.astype('float64')
+
+    df.to_csv("violin.csv")
 
 
+# Run the experiments
 grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
-rows = generate_results(grid_files)
-my_array = np.array(rows)
-
-df = pd.DataFrame(my_array, columns=['grid', 'algorithm', 'measurement', 'performance'])
-df['grid'] = df.grid.astype('category')
-df['algorithm'] = df.algorithm.astype('category')
-df['measurement'] = df.measurement.astype('category')
-df['performance'] = df.performance.astype('float64')
-
-df.to_csv("violin3.csv")
-
-g = sns.catplot(x="algorithm", y="performance",
-                hue="measurement", col="grid",
-                data=df, kind="violin", split=True,
-                height=4, aspect=.7);
-plt.show()
+generate_results(grid_files)
