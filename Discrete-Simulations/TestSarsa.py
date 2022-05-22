@@ -1,10 +1,10 @@
 # Import our robot algorithm to use in this simulation:
-from robot_configs.qlearning import robot_epoch
+from robot_configs.qlearning import robot_epoch as ql
+from robot_configs.sarsa import robot_epoch as sa
+
 import pickle
 from environment import Robot
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
 
 # Cleaned tile percentage at which the room is considered 'clean':
@@ -16,14 +16,13 @@ n_moves = []
 cleaned = []
 
 """
-    Executes a run of Policy iteration. 
+    Executes a run of SARSA or Q-learning. 
     @g: the gamma parameter
     @t: the theta parameter
     @c: the certainty used for policy iteration 
 """
 
-
-def run(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, grid_file='house.grid'):
+def run(qlearning=True, sarsa = False, gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, grid_file='house.grid'):
     deaths = 0
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -38,7 +37,10 @@ def run(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, grid_file='h
     while True:
         n_epochs += 1
         # Do a robot epoch (basically call the robot algorithm once):
-        robot_epoch(robot, gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
+        if sarsa:
+            sa(robot, gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
+        elif qlearning:
+            ql(robot, gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
         # Stop this simulation instance if robot died :( :
         if not robot.alive:
             deaths += 1
@@ -58,58 +60,6 @@ def run(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, grid_file='h
         n_revisted_tiles = len(moves) - len(u_moves)
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
-#
-#
-# """
-#     Plots violin plots representing the distribution of cleanliness and efficiency
-#      of 10 consecutive runs of Policy iteration.
-#     @g: the gamma parameter
-#     @t: the theta parameter
-#     @c: the certainty used for policy iteration
-# """
-#
-#
-# def plotDistribution(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, runs=10):
-#     cleaned = []
-#     efficiencies = []
-#     for i in range(runs):
-#         cleaned_a, efficiency = run(gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
-#         cleaned.append(cleaned_a)
-#         efficiencies.append(efficiency)
-#     my_array = np.array([cleaned, efficiencies]).T
-#     df = pd.DataFrame(my_array, columns=['cleaned', 'efficiencies'])
-#     ax = sns.violinplot(data=df)
-#     ax.set_ylabel("iteration policy performance (%)")
-#     ax.set_title("distribution of robot performance", size=18, weight='bold');
-#     plt.show()
-#
-#
-# """
-#     Plots violin plots representing the distribution of cleanliness of 10 consecutive runs of Policy iteration on
-#      multiple grids.
-#     @g: the gamma parameter
-# """
-#
-#
-# def plotcleanness(gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200, runs=10):
-#     grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
-#     grid_files_names = ["death", "house", "random-house-3", "snake"]
-#     array = []
-#     for gf in grid_files:
-#         efficiencies = []
-#         for i in range(runs):
-#             cleaned_a, efficiency = run(gamma=gamma, epsilon=epsilon, alpha=alpha, episodes=episodes, steps=steps)
-#             efficiencies.append(efficiency)
-#         array.append(efficiencies)
-#
-#     my_array = np.array(array).T
-#     df = pd.DataFrame(my_array, columns=grid_files_names)
-#     ax = sns.violinplot(data=df)
-#
-#     ax.set_ylabel("efficiency (%)")
-#     ax.set_title("policy iteration - efficiency vs grid", size=18, weight='bold');
-#     plt.show()
-
 
 """
     Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs

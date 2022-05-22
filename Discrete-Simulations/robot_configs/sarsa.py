@@ -65,7 +65,7 @@ def take_action(action, r, i_position, j_position):
         return new_i, new_j, reward
 
 
-def robot_epoch(robot, gamma=0.9, epsilon=0.1, alpha=0.5, episodes=200, steps=200):
+def robot_epoch(robot, gamma=0.5, epsilon=0.05, alpha=0.6, episodes=300, steps=300):
     """
     Execute SARSA algorithm to find the best move
     :param robot: main actor of type Robot

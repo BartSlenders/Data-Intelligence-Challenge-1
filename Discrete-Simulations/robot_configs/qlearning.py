@@ -111,7 +111,6 @@ def robot_epoch(robot, gamma=0.5, epsilon=0.2, alpha=0.6, episodes = 300, steps 
         for _ in range(steps):
             action = get_action(Q, epsilon, i_position, j_position)
             new_i, new_j, reward = take_action(action, r, i_position, j_position)
-            # new_action = get_action(Q, epsilon, new_i, new_j)
             Q[i_position][j_position][action] = Q[i_position][j_position][action] + alpha * (
                     reward + gamma * max([Q[new_i][new_j][key] for key in range(4)]) -
                     Q[i_position][j_position][action])
