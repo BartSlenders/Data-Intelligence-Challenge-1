@@ -14,13 +14,15 @@ n_moves = []
 cleaned = []
 
 
-"""
-    Executes a run of Policy iteration. 
-    @g: the gamma parameter
-    @t: the theta parameter
-    @c: the certainty used for policy iteration 
-"""
 def run(gamma=0.9, epsilon=0.1, episodes=100, steps=100, grid_file ='house.grid'):
+    """
+    Executes a run of Monte Carlo.
+    :param gamma: the discount factor
+    :param epsilon: probability of making random move
+    :param episodes: nr of episodes
+    :param steps: nr of steps
+    :param grid_file: the grid used
+    """
     deaths = 0
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -56,12 +58,17 @@ def run(gamma=0.9, epsilon=0.1, episodes=100, steps=100, grid_file ='house.grid'
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-"""
-    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
-    of policy iteration, together with the parameters used.
-    @gamma: the gamma parameter
-"""
+
 def generate_results(gamma, epsilon, episodes, steps, runs_per_combination=3):
+    """
+    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
+    of monte carlo, together with the parameters used
+    :param gamma: the discount factor
+    :param epsilon: probability of making random move
+    :param episodes: nr of episodes
+    :param steps: nr of steps
+    :param runs_per_combination: nr of runs for each combination
+    """
     rows = []
 
     for g in gamma:

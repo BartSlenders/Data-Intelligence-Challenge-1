@@ -85,13 +85,15 @@ def robot_epoch(robot, gamma=0.5, epsilon=0.1, episodes=900, steps=6):
     Q = [[{0: np.random.uniform(), 1: np.random.uniform(), 2: np.random.uniform(), 3: np.random.uniform()} for _ in range(rows)] for _ in range(cols)]
     # initialize the returns with empty list for every state action pair
     returns = [[{0: [], 1: [], 2: [], 3: []} for _ in range(rows)] for _ in range(cols)]
+    # obtain initial state
     x_pos, y_pos = robot.pos
 
+    # set initial policy
     policy = np.full((cols, rows), 0)
     for i in range(1, cols-1):
         for j in range(1, rows-1):
             actions = []
-            # we will check the surrounding tiles
+            # check available moves based on rewards
             if r[i, j - 1] >= 0:
                 actions.append(0)
             if r[i + 1, j] >= 0:
@@ -118,12 +120,14 @@ def robot_epoch(robot, gamma=0.5, epsilon=0.1, episodes=900, steps=6):
         reversed_episode = episode[::-1]
         reversed_state_action_pairs = state_action_pairs[::-1]
 
+        # index to be used for checking the preceding state action pairs
         index = 1
         # loop for each step in episode, t = T-1,...,0
         for element in reversed_episode:
             G = G*gamma + element[3]
             # unless the pair S_t, A_t appears in S_0, A_0, ...,S_{t-1}, A_{t-1}
             if (element[0], element[1], element[2]) not in reversed_state_action_pairs[index:]:
+                # update returns, Q, and policy
                 returns[element[0]][element[1]][element[2]].append(G)
                 Q[element[0]][element[1]][element[2]] = np.mean(returns[element[0]][element[1]][element[2]])
                 policy[element[0]][element[1]] = get_action(Q, epsilon, element[0], element[1])
