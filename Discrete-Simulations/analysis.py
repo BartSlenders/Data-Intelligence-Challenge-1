@@ -14,8 +14,6 @@ import seaborn as sns
 import pandas as pd
 
 
-
-
 def runMC(gamma=0.7, epsilon=0.05, episodes=500, steps=3, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
     if grid_file == "example-random-house-3.grid":
@@ -147,7 +145,8 @@ def runSA(gamma=0.5, epsilon=0.05, alpha=0.6, episodes=300, steps=300, grid_file
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-def runPC(g=0.9,t=0.001,c=0.3, grid_file = 'house.grid'):
+
+def runPC(g=0.9, t=0.001, c=0.3, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
     if grid_file == "example-random-house-3.grid":
         stopping_criteria = 82.5
@@ -190,7 +189,8 @@ def runPC(g=0.9,t=0.001,c=0.3, grid_file = 'house.grid'):
         efficiency = (100 * n_total_tiles) / (n_total_tiles + n_revisted_tiles)
     return clean_percent, efficiency
 
-def runVA(g=0.8, t=0.001, c=0.3, grid_file = 'house.grid'):
+
+def runVA(g=0.8, t=0.001, c=0.3, grid_file='house.grid'):
     # Cleaned tile percentage at which the room is considered 'clean':
     if grid_file == "example-random-house-3.grid":
         stopping_criteria = 82.5
@@ -269,7 +269,6 @@ def generate_results(grids, runs_per_combination=10):
             rows.append([g, "Value iteration", "efficiency", efficiency.astype('float')])
             print(g, "Value Iteration", "efficiency", efficiency.astype('float'))
     return rows
-
 
 
 grid_files = ["death.grid", "house.grid", "example-random-house-3.grid", "snake.grid"]
