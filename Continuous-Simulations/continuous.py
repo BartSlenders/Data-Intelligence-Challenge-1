@@ -121,9 +121,9 @@ class Grid:
 
     def evaluate(self):
         maxscore = len(self.goals)*3 + len(self.filthy)
-        self.goals = [i for i in self.goals if i is not None]
-        self.filthy = [i for i in self.filthy if i is not None]
-        score = len(self.goals)*3 + len(self.filthy)
+        goals = [i for i in self.goals if i is not None]
+        filthy = [i for i in self.filthy if i is not None]
+        score = len(goals)*3 + len(filthy)
         cleanpercent = score/maxscore*100
         batteryleft = sum([i.battery_lvl for i in self.robots])/len(self.robots)
         return cleanpercent, batteryleft
