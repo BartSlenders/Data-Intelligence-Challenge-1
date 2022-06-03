@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 
 plt.ion()
 
-grid = parse_config('example.grid')
-grid.spawn_robots([Robot(id=1, battery_drain_p=0.1, battery_drain_lam=10),
-                   Robot(id=2, battery_drain_p=0.1, battery_drain_lam=10)],
-                  [(0, 0), (1, 2)])
+grid = parse_config('random_house_0.grid')
+grid.spawn_robots([Robot(id=1, battery_drain_p=0.2, battery_drain_lam=10),
+                   Robot(id=2, battery_drain_p=0.2, battery_drain_lam=10),
+                   Robot(id=3, battery_drain_p=0.2, battery_drain_lam=10)],
+                  [(0, 0), (1, 6), (2, 14)])
 
 while True:
     grid.plot_grid()
