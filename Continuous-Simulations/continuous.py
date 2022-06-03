@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib
-
-matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from copy import deepcopy
 import random
 import ast
+
+matplotlib.use("TkAgg")
 
 
 
@@ -30,6 +30,7 @@ class Grid:
         self.height = height
         self.obstacles = []
         self.goals = []
+        self.filthy = []
         self.robots = []
 
         self.fig = plt.figure()
@@ -37,6 +38,7 @@ class Grid:
         self.border_line, = plt.plot(*self.get_border_coords(), color='black')
         self.obstacle_lines = []
         self.goal_lines = []
+        self.filthy_lines = []
         self.robot_lines = []
 
     def spawn_robots(self, robots, starting_positions):
@@ -71,9 +73,32 @@ class Grid:
 
     def check_goals(self, robot):
         for i, goal in enumerate(self.goals):
-            if goal.intersect(robot.bounding_box):
-                self.goals.remove(goal)
-                self.goal_lines[i].set_data(None, None)
+            if goal != None:
+                if goal.intersect(robot.bounding_box):
+                    self.goals[i] = None
+                    self.goal_lines[i].set_data(None, None)
+
+    def put_filth(self, x, y, size_x=1, size_y=1):
+        assert self.is_in_bounds(x, y, size_x, size_y)
+        filth = Square(x + 0.05, x + size_x - 0.05, y + 0.05, y + size_y - 0.05)
+        # if the filth intersects with a goal or an obstacle, don't create it
+        for goal in self.goals:
+            if filth.intersect(goal):
+                return
+        for obstacle in self.obstacles:
+            if filth.intersect(obstacle):
+                return
+        self.filthy.append(filth)
+        self.filthy_lines.append(
+            plt.plot([filth.x1, filth.x2, filth.x2, filth.x1, filth.x1],
+                     [filth.y1, filth.y1, filth.y2, filth.y2, filth.y1], color='yellow')[0])
+
+    def check_filth(self, robot):
+        for i, filth in enumerate(self.filthy):
+            if filth != None:
+                if filth.intersect(robot.bounding_box):
+                    self.filthy[i] = None
+                    self.filthy_lines[i].set_data(None, None)
 
     def is_blocked(self, robot):
         blocked_by_obstacle = any([ob.intersect(robot.bounding_box) for ob in self.obstacles])
@@ -116,8 +141,9 @@ class Robot:
         # If we have a random move happen:
         if np.random.binomial(n=1, p=p_random) == 1:
             self.direction_vector = (random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1))
-        # If there are no goals left, die:
-        if len(self.grid.goals) == 0:
+        # If there are no goals or filthy tiles left, die:
+        if len([ i for i in self.grid.goals if not i is None]) == 0 and \
+                len([ i for i in self.grid.filthy if not i is None]) == 0:
             self.alive = False
         # Cant move if we died:
         if self.alive:
@@ -147,6 +173,7 @@ class Robot:
                 self.history.append(self.bounding_box)
                 # Check if in this position we have reached a goal:
                 self.grid.check_goals(self)
+                self.grid.check_filth(self)
                 return True
         else:
             return False
@@ -176,6 +203,11 @@ def parse_config(file):
                                 grid.put_goal(*ast.literal_eval(coords))
                             else:
                                 raise ValueError(f"Unkown type '{typ}'.")
+            # the baseline grid is fully defined here
+            for i in range(grid.width):
+                for j in range(grid.height):
+                    grid.put_filth(i,j)
+
             return grid
 
 
