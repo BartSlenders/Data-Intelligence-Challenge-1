@@ -119,6 +119,14 @@ class Grid:
         plt.draw()
         plt.pause(0.0001)
 
+    def evaluate(self):
+        maxscore = len(self.goals)*3 + len(self.filthy)
+        self.goals = [i for i in self.goals if i is not None]
+        self.filthy = [i for i in self.filthy if i is not None]
+        score = len(self.goals)*3 + len(self.filthy)
+        cleanpercent = score/maxscore*100
+        batteryleft = sum([i.battery_lvl for i in self.robots])/len(self.robots)
+        return cleanpercent, batteryleft
 
 class Robot:
     def __init__(self, id, size=1, battery_drain_p=0, battery_drain_lam=0):
@@ -142,8 +150,8 @@ class Robot:
         if np.random.binomial(n=1, p=p_random) == 1:
             self.direction_vector = (random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1))
         # If there are no goals or filthy tiles left, die:
-        if len([ i for i in self.grid.goals if not i is None]) == 0 and \
-                len([ i for i in self.grid.filthy if not i is None]) == 0:
+        if len([ i for i in self.grid.goals if i is not None]) == 0 and \
+                len([ i for i in self.grid.filthy if i is not None]) == 0:
             self.alive = False
         # Cant move if we died:
         if self.alive:

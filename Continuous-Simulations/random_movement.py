@@ -19,5 +19,8 @@ while True:
         if robot.alive:
             if not robot.move(p_random=0.05):
                 robot.direction_vector = (0.1, 0.1)
+cleanpercent, batteryleft = grid.evaluate()
+print('the floor is', cleanpercent, 'percent clean')
+print('there is', batteryleft, 'of the battery left')
 grid.plot_grid()
 time.sleep(3)
