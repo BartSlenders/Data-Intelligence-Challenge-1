@@ -158,6 +158,9 @@ class Robot:
             if self.direction_vector == (0, 0):  # Literally 0 speed so no movement.
                 return False
             # print('vector '+str(self.direction_vector[0]))
+
+            # print('init pos: '+str(self.pos))
+            # print('dir vec: '+str(self.direction_vector))
             new_pos = tuple(np.array(self.pos) + self.direction_vector)
             # Temporarily set the new bounding box:
             new_box = deepcopy(self.bounding_box)
@@ -170,7 +173,7 @@ class Robot:
             else:
                 do_battery_drain = np.random.binomial(1, self.battery_drain_p)
                 if do_battery_drain == 1 and self.battery_lvl > 0:
-                    print(self.direction_vector)
+                    # print('4: '+str(self.direction_vector))
                     self.battery_lvl -= (
                             np.random.exponential(self.battery_drain_lam) * abs(sum(self.direction_vector)))
                     if self.battery_lvl <= 0:
@@ -179,6 +182,7 @@ class Robot:
                         return False
                 del new_box
                 self.pos = new_pos
+                # print('new pos: '+str(self.pos))
                 self.bounding_box.update_pos(*self.pos)
                 self.history.append(self.bounding_box)
                 # Check if in this position we have reached a goal:

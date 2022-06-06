@@ -139,8 +139,8 @@ def robot_epoch(robot, gamma=0.95, episodes=10, steps=10):
 
     # obtain the best action from Q for the current state
     state = np.array([x_pos, y_pos, x_pos+robot.size, y_pos+robot.size])
-    print('state '+str(state))
+    # print('state '+str(state))
     action, _ = policy_network.select_action(state)
-    print('action '+str(actions[action]))
-    robot.direction_vector = action
+    # print('action '+str(actions[action]))
+    robot.direction_vector = actions[action]
     robot.move()
