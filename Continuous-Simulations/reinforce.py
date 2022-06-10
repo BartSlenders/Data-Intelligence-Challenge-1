@@ -14,7 +14,7 @@ class PolicyNetwork(nn.Module):
     # state_space=4? if x_start,y_start,x_end,y_end
     def __init__(self, state_space, action_space):
         super(PolicyNetwork, self).__init__()
-
+        # TODO: experiment with different hidden state sizes (instead of 128)
         self.input_layer = nn.Linear(state_space, 128)
         self.output_layer = nn.Linear(128, action_space)
 
@@ -44,7 +44,7 @@ class PolicyNetwork(nn.Module):
 class ValueNetwork(nn.Module):
     def __init__(self, observation_space):
         super(ValueNetwork, self).__init__()
-
+        # TODO: experiment with different hidden state sizes (instead of 128)
         self.input_layer = nn.Linear(observation_space, 128)
         self.output_layer = nn.Linear(128, 1)
 
@@ -79,13 +79,21 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
     return new_filthy, new_goals, blocked
 
 
+# TODO: experiment with gamma, alpha, episodes, steps
 def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
+
+    # TODO: experiment with action max/min value
     low = -0.5
     high = 0.5
 
     actions = []
+    # TODO: experiment with more or less than 20 actions
     for _ in range(20):
+        # add random actions
         actions.append((np.random.uniform(low=low, high=high), np.random.uniform(low=low, high=high)))
+
+    # TODO: should match the high/low
+    # add up,down,left,right
     actions.append((0, 0.5))
     actions.append((0, -0.5))
     actions.append((0.5, 0))
@@ -122,11 +130,13 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
                                                                     robot.grid)
 
             if is_blocked:
+                # TODO: experiment with different reward
                 reward = -2
                 episode.append([state, action, reward, log_prob])
             else:
                 factor_filthy = len(prior_filthy) - len(new_filthy)
                 factor_goals = len(prior_goals) - len(new_goals)
+                # TODO: experiment with different factors instead of 1 and 2
                 reward = 1*factor_filthy + 2*factor_goals
 
                 episode.append([state, action, reward, log_prob])
