@@ -139,7 +139,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
                 # TODO: experiment with different factors instead of 1 and 2
                 reward = 1*factor_filthy + 2*factor_goals
 
-                episode.append([state, action, reward, log_prob])
+                episode.append([new_state, action, reward, log_prob])
 
                 state = new_state
                 prior_filthy = new_filthy
