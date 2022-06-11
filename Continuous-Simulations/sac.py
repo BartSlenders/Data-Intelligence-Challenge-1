@@ -1,6 +1,5 @@
 import os
 
-import torch
 import torch as T
 import torch.nn.functional as F
 import torch.nn as nn
@@ -312,6 +311,8 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
 
 
 # TODO: experiment with gamma, alpha, episodes, steps
+# reward_scale is the most important parameter - entropy comes from it, encourages exploration when it is decreased,
+# encourages exploitation when increased
 def robot_epoch(robot, episodes=20, steps=20, state_space=4, action_space=2, max_action=0.2, alpha=0.0003, beta=0.0003,
                 gamma=0.99, max_size=1000000, tau=0.005, batch_size=256, reward_scale=2):
     agent = Agent(state_space, action_space, max_action, alpha, beta, gamma, max_size, tau, batch_size, reward_scale)
