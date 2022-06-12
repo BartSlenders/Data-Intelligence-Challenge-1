@@ -80,24 +80,24 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
 
 
 # TODO: experiment with gamma, alpha, episodes, steps
-def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
+def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=25, steps=50):
 
     # TODO: experiment with action max/min value
-    low = -0.5
-    high = 0.5
+    low = -0.2
+    high = 0.2
 
     actions = []
     # TODO: experiment with more or less than 20 actions
-    for _ in range(20):
+    for _ in range(40):
         # add random actions
         actions.append((np.random.uniform(low=low, high=high), np.random.uniform(low=low, high=high)))
 
     # TODO: should match the high/low
     # add up,down,left,right
-    actions.append((0, 0.5))
-    actions.append((0, -0.5))
-    actions.append((0.5, 0))
-    actions.append((-0.5, 0))
+    actions.append((0, 0.2))
+    actions.append((0, -0.2))
+    actions.append((0.2, 0))
+    actions.append((-0.2, 0))
 
     policy_network = PolicyNetwork(4, len(actions)).to(device)
     value_network = ValueNetwork(4).to(device)
@@ -172,7 +172,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
 
         # Train value network
         value_loss = F.mse_loss(value_estimates, G)
-        print("value loss "+str(value_loss))
+        #print("value loss "+str(value_loss))
 
         #Backpropagate
         value_optimizer.zero_grad()
@@ -193,7 +193,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
         #Backpropagation
         policy_optimizer.zero_grad()
         sum(policy_loss).backward()
-        print("policy loss "+str(sum(policy_loss)))
+        #print("policy loss "+str(sum(policy_loss)))
         policy_optimizer.step()
 
     # obtain the best action from Q for the current state

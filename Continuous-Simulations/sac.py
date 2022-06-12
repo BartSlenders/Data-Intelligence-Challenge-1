@@ -239,6 +239,7 @@ class Agent:
         target_value = self.target_value_network(new_state).view(-1)
         target_value[done] = 0.0
 
+        # this block repeats later -> can be put in a functions to remove duplication
         actions, log_probs = self.actor_network.sample_normal(state, reparameterize=False)
         log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_network_1(state, actions)
@@ -252,6 +253,7 @@ class Agent:
         value_loss.backward(retain_graph=True)
         self.value_network.optimizer.step()
 
+        # this block repeats above -> can be put in a functions to remove duplication
         actions, log_probs = self.actor_network.sample_normal(state, reparameterize=True)
         log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_network_1(state, actions)
