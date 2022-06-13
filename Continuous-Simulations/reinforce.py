@@ -154,7 +154,8 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=25, steps=50):
         total_r = 0
 
         for reward in rewards[::-1]:
-            G.append(reward + total_r * gamma)
+            total_r = reward + total_r * gamma
+            G.append(total_r)
 
         G = G[::-1]
 
