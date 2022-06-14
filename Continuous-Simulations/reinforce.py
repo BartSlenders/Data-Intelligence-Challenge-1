@@ -83,6 +83,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
     low = -0.5
     high = 0.5
 
+    # The actions are the 4 straight directions and 20 random directions.
     actions = []
     for _ in range(20):
         actions.append((np.random.uniform(low=low, high=high), np.random.uniform(low=low, high=high)))
@@ -127,7 +128,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=10, steps=20):
             else:
                 factor_filthy = len(prior_filthy) - len(new_filthy)
                 factor_goals = len(prior_goals) - len(new_goals)
-                reward = 1*factor_filthy + 2*factor_goals
+                reward = 1*factor_filthy + 3*factor_goals
 
                 episode.append([state, action, reward, log_prob])
 

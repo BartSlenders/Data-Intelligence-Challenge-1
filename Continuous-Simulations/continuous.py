@@ -23,6 +23,51 @@ class Square:
     def update_pos(self, x, y):
         self.x1, self.x2, self.y1, self.y2 = x, x + self.x_size, y, y + self.y_size
 
+class SimGrid:
+    """A different grid to make copies of the existing grid,
+    mainly to calculate rewards and simulate it more discretely"""
+    def __init__(self, grid):
+        self.width = grid.width
+        self.height = grid.height
+        self.obstacles = grid.obstacles
+        self.goals = grid.goals
+        self.filthy = grid.filthy
+        self.robot = grid.robots[0]
+        self.goal_lines = grid.goal_lines
+        self.filthy_lines = grid.filthy_lines
+        self.robot_lines = grid.robot_lines[0]
+
+    def move_robot(self, directionvector):
+        """"this function will move the robot, not by actually moving,
+        but by teleporting it forward by the directionvector
+        right now, we do not yet remove reward tiles"""
+        self.robot.pos = (self.robot.pos[0] + directionvector[0], self.robot.pos[1] + directionvector[1])
+
+    def reward(self, directionvector):
+        """"this function will return the reward of a move
+        In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used"""
+        self.move_robot(directionvector)
+        reward = 0
+        for goal in self.goals:
+            if goal != None:
+                if self.robot.intersect(goal):
+                    reward += 3
+        for filthy in self.filthy:
+            if filthy != None:
+                if self.robot.intersect(filthy):
+                    reward += 1
+        for obstacle in self.obstacles:
+            if obstacle != None:
+                if self.robot.intersect(obstacle):
+                    reward -= 1
+        #put the robot back in its original position
+        self.move_robot((-directionvector[0], -directionvector[1]))
+        return reward
+
+    def something(self):
+        pass
+
+
 
 class Grid:
     def __init__(self, width, height, ):
@@ -110,6 +155,30 @@ class Grid:
     def get_border_coords(self):
         return [0, self.width, self.width, 0, 0], [0, 0, self.height, self.height, 0]
 
+    def check_intersections(self):
+        bounding_box = self.robots[0]
+        obstacles = self.obstacles
+        blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
+                  not (bounding_box.x1 >= 0 and bounding_box.x2 <= self.width and bounding_box.y1 >= 0 and
+                       bounding_box.y2 <= self.height)
+
+        if blocked:
+            return None, None, blocked
+
+        new_filthy = deepcopy(self.filthy)
+        for i, filth in enumerate(self.filthy):
+            if filth is not None:
+                if filth.intersect(bounding_box):
+                    new_filthy.remove(new_filthy[i])
+
+        new_goals = deepcopy(self.goals)
+        for i, goal in enumerate(goals):
+            if goal is not None:
+                if goal.intersect(bounding_box):
+                    new_goals.remove(new_goals[i])
+
+        return new_filthy, new_goals, blocked
+
     def plot_grid(self):
         for i, robot in enumerate(self.robots):
             robot_box = robot.history[-1]
@@ -124,7 +193,7 @@ class Grid:
         goals = [i for i in self.goals if i is not None]
         filthy = [i for i in self.filthy if i is not None]
         score = len(goals)*3 + len(filthy)
-        cleanpercent = score/maxscore*100
+        cleanpercent = 100 - (score/maxscore*100)
         batteryleft = sum([i.battery_lvl for i in self.robots])/len(self.robots)
         return cleanpercent, batteryleft
 
@@ -146,6 +215,8 @@ class Robot:
         assert self.grid.is_in_bounds(start_x, start_y, self.size, self.size)
 
     def move(self, p_random=0):
+        """"returns False if the robot is not moving
+        Moves the robot and returns True otherwise"""
         # If we have a random move happen:
         if np.random.binomial(n=1, p=p_random) == 1:
             self.direction_vector = (random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1))
@@ -192,6 +263,12 @@ class Robot:
         else:
             return False
 
+    def intersect(self, other):
+        x1, y1 = self.pos
+        x2, y2 = self.pos[0]+self.size, self.pos[1]+self.size
+        intersecting = not (x2 <= other.x1 or x1 >= other.x2 or y2 <= other.y1 or y1 >= other.y2)
+        inside = (other.x1 >= x1 and other.x2 <= x2 and other.y1 >= y1 and other.y2 <= y2)
+        return intersecting or inside
 
 def parse_config(file):
     with open(file, 'r') as f:
