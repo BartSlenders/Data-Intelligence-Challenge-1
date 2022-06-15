@@ -270,7 +270,7 @@ class Robot:
         inside = (other.x1 >= x1 and other.x2 <= x2 and other.y1 >= y1 and other.y2 <= y2)
         return intersecting or inside
 
-def parse_config(file):
+def parse_config(file, divideby = 1):
     with open(file, 'r') as f:
         data = f.read().split('\n')
         if len(data) == 0:
@@ -295,6 +295,7 @@ def parse_config(file):
                             else:
                                 raise ValueError(f"Unkown type '{typ}'.")
             # the baseline grid is fully defined here
+            #TODO: use the divideby variable to put filth smaller
             for i in range(grid.width):
                 for j in range(grid.height):
                     grid.put_filth(i,j)
