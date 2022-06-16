@@ -108,10 +108,10 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
     # actions.append((0.1, 0))
     # actions.append((-0.1, 0))
 
-    actions = [(0.85,0), (0,0.85), (-0.85,0), (0,-0.85),
-                    (1.05,0), (0,1.05), (-1.05,0), (0,-1.05),
-                   (0.46,0.46),(-0.46,0.46),(0.46,-0.46),(-0.46,-0.46),
-                   (1.06,1.06),(-1.06,1.06),(1.06,-1.06),(-1.06,-1.06)]
+    actions = [(0.85, 0), (0, 0.85), (-0.85, 0), (0, -0.85),
+               (1.05, 0), (0, 1.05), (-1.05, 0), (0, -1.05),
+               (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
+               (1.06, 1.06), (-1.06, 1.06), (1.06, -1.06), (-1.06, -1.06)]
 
     policy_network = PolicyNetwork(4, len(actions)).to(device)
     value_network = ValueNetwork(4).to(device)
@@ -158,6 +158,8 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
                 state = new_state
                 prior_filthy = new_filthy
                 prior_goals = new_goals
+
+            #print('filthy: ', len(new_filthy), 'state: ', state, 'action: ', actions[action_id])
 
             if done:
                 break

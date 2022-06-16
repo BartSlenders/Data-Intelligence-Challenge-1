@@ -22,8 +22,5 @@ while True:
             print('the floor is', cleanpercent, 'percent clean')
             print('there is', batteryleft, 'of the battery left')
 
-cleanpercent, batteryleft = grid.evaluate()
-print('the floor is', cleanpercent, 'percent clean')
-print('there is', batteryleft, 'of the battery left')
 grid.plot_grid()
 time.sleep(3)

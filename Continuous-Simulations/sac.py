@@ -292,7 +292,7 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
                                bounding_box.y2 <= grid.height)
 
     if blocked:
-        return None, None, blocked, None
+        return filthy, goals, blocked, False
 
     new_filthy = copy.deepcopy(filthy)
     for i, filth in enumerate(filthy):
@@ -322,12 +322,11 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
 # reward_scale is the most important parameter - entropy comes from it, encourages exploration when it is decreased,
 # encourages exploitation when increased
 def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max_action=1, alpha=0.001, beta=0.001,
-                gamma=0.99, max_size=1000000, tau=0.005, batch_size=256, reward_scale=0.1):
+                gamma=0.99, max_size=1000000, tau=0.005, batch_size=256, reward_scale=0.1, load_checkpoint=False):
     agent = Agent(state_space, action_space, max_action, alpha, beta, gamma, max_size, tau, batch_size, reward_scale)
 
     best_score = -9999
     score_history = []
-    load_checkpoint = False
 
     if load_checkpoint:
         agent.load_models()
@@ -355,10 +354,9 @@ def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max
                                                                                  new_y_pos, new_y_pos + robot.size),
                                                                     prior_filthy, prior_goals, robot.grid.obstacles,
                                                                     robot.grid)
-
             if is_blocked:
                 # TODO: experiment with different reward
-                reward = -2
+                reward = -3
                 score += reward
                 agent.store_in_buffer(state, action, reward, state, done)
             else:
@@ -375,6 +373,8 @@ def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max
                 prior_filthy = new_filthy
                 prior_goals = new_goals
 
+            #print('filthy: ', len(new_filthy), 'state: ', state, 'action: ', action, 'blocked: ', is_blocked)
+
             if not load_checkpoint:
                 agent.learn()
 
@@ -389,9 +389,10 @@ def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max
             if not load_checkpoint:
                 agent.save_models()
 
+        # print('episode ', episode, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
+
     # obtain the best action from Q for the current state
     state = np.array([x_pos, y_pos, x_pos+robot.size, y_pos+robot.size])
     action = agent.select_action(state)
     robot.direction_vector = (action[0], action[1])
-    print(robot.direction_vector)
     robot.move()
