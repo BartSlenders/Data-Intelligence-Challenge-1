@@ -58,7 +58,7 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
                                bounding_box.y2 <= grid.height)
 
     if blocked:
-        return None, None, blocked, None
+        return filthy, goals, blocked, False
 
     new_filthy = copy.deepcopy(filthy)
     for i, filth in enumerate(filthy):
