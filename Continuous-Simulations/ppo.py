@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
-from continuous import Square
+from continuous import SimGrid
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -62,36 +62,36 @@ class ActorCriticNetwork(nn.Module):
         return categorical_distribution.log_prob(torch.Tensor(actions)), categorical_distribution.entropy()
 
 
-def check_intersections(bounding_box, filthy, goals, obstacles, grid):
-    blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
-                          not (bounding_box.x1 >= 0 and bounding_box.x2 <= grid.width and bounding_box.y1 >= 0 and
-                               bounding_box.y2 <= grid.height)
-
-    if blocked:
-        return filthy, goals, blocked, False
-
-    new_filthy = copy.deepcopy(filthy)
-    for i, filth in enumerate(filthy):
-        if filth is not None:
-            if filth.intersect(bounding_box):
-                new_filthy[i] = None
-
-    new_filthy = [i for i in new_filthy if i]
-
-    new_goals = copy.deepcopy(goals)
-    for i, goal in enumerate(goals):
-        if goal is not None:
-            if goal.intersect(bounding_box):
-                new_goals[i] = None
-
-    new_goals = [i for i in new_goals if i]
-
-    if len(new_filthy) == 0 and len(new_goals) == 0:
-        done = True
-    else:
-        done = False
-
-    return new_filthy, new_goals, blocked, done
+# def check_intersections(bounding_box, filthy, goals, obstacles, grid):
+#     blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
+#                           not (bounding_box.x1 >= 0 and bounding_box.x2 <= grid.width and bounding_box.y1 >= 0 and
+#                                bounding_box.y2 <= grid.height)
+#
+#     if blocked:
+#         return filthy, goals, blocked, False
+#
+#     new_filthy = copy.deepcopy(filthy)
+#     for i, filth in enumerate(filthy):
+#         if filth is not None:
+#             if filth.intersect(bounding_box):
+#                 new_filthy[i] = None
+#
+#     new_filthy = [i for i in new_filthy if i]
+#
+#     new_goals = copy.deepcopy(goals)
+#     for i, goal in enumerate(goals):
+#         if goal is not None:
+#             if goal.intersect(bounding_box):
+#                 new_goals[i] = None
+#
+#     new_goals = [i for i in new_goals if i]
+#
+#     if len(new_filthy) == 0 and len(new_goals) == 0:
+#         done = True
+#     else:
+#         done = False
+#
+#     return new_filthy, new_goals, blocked, done
 
 
 def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, actor_lr=0.0003, critic_lr=0.001,
@@ -101,7 +101,7 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, act
                (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
                (1.06, 1.06), (-1.06, 1.06), (1.06, -1.06), (-1.06, -1.06)]
 
-    actor_critic = ActorCriticNetwork(state_space=4, action_space=len(actions))
+    actor_critic = ActorCriticNetwork(state_space=2, action_space=len(actions))
 
     optimizer = torch.optim.Adam([
         {'params': actor_critic.actor.parameters(), 'lr': actor_lr},
@@ -113,7 +113,7 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, act
 
     for _ in range(1, episodes+1):
         batch = []
-        state = np.array([x_pos, y_pos, x_pos + robot.size, y_pos + robot.size])
+        state = np.array([x_pos, y_pos])
         prior_filthy = copy.deepcopy(robot.grid.filthy)
         prior_goals = copy.deepcopy(robot.grid.goals)
 
@@ -123,24 +123,17 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, act
             action_id, log_prob = actor_critic.get_action(state)
             new_x_pos = state[0] + actions[action_id][0]
             new_y_pos = state[1] + actions[action_id][1]
-            new_state = np.array([new_x_pos, new_y_pos, new_x_pos + robot.size, new_y_pos + robot.size])
+            new_state = np.array([new_x_pos, new_y_pos])
 
             # calculate reward
             # check if the new position is possible: not out of bounds and does not intersect obstacle,
             # if so do not update position
-            new_filthy, new_goals, is_blocked, done = check_intersections(Square(new_x_pos, new_x_pos + robot.size,
-                                                                                 new_y_pos, new_y_pos + robot.size),
-                                                                    prior_filthy, prior_goals, robot.grid.obstacles,
-                                                                    robot.grid)
+            test = SimGrid(robot.grid, prior_filthy, prior_goals)
+            reward, is_blocked, done, new_filthy, new_goals = test.reward(actions[action_id])
 
             if is_blocked:
-                reward = -2
                 batch.append([state, action_id, reward, log_prob, done])
             else:
-                factor_filthy = len(prior_filthy) - len(new_filthy)
-                factor_goals = len(prior_goals) - len(new_goals)
-                reward = 1 * factor_filthy + 3 * factor_goals
-
                 batch.append([new_state, action_id, reward, log_prob, done])
 
                 state = new_state
@@ -215,8 +208,8 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, act
             if done:
                 break
 
-    # obtain the best action from Q for the current state
-    state = np.array([x_pos, y_pos, x_pos + robot.size, y_pos + robot.size])
+    # obtain the best action from the ppo actor_critic network
+    state = np.array([x_pos, y_pos])
     # print('state '+str(state))
     action_id, _ = actor_critic.get_action(state)
     print('action ' + str(actions[action_id]))

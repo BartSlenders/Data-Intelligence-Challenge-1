@@ -6,9 +6,9 @@ from copy import deepcopy
 
 plt.ion()
 
-grid = parse_config('random_house_0.grid', divideby=2)
-grid.spawn_robots([Robot(id=1, battery_drain_p=0.2, battery_drain_lam=10)],
-                   [(2, 14)])
+grid = parse_config('random_house_0.grid', divideby=1)
+grid.spawn_robots([Robot(id=1, battery_drain_p=1, battery_drain_lam=0.5)],
+                   [(0, 0)])
 
 Potential_moves = [(0.85,0), (0,0.85), (-0.85,0), (0,-0.85),
                    (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
@@ -36,8 +36,8 @@ while True:
             elif value == reward:
                 bestmove.append(move)
         move = random.sample(bestmove, 1)[0]
-        print(move)
-        move = (move[0]/10, move[1]/10)
+        #print(move)
+        move = (move[0], move[1])
         robot.direction_vector = move
         robot.move()
 

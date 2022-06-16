@@ -7,7 +7,7 @@ import torch.optim as optim
 from torch.distributions.normal import Normal
 import numpy as np
 import copy
-from continuous import Square
+from continuous import SimGrid
 
 
 class ReplayBuffer:
@@ -155,11 +155,8 @@ class ActorNetwork(nn.Module):
         log_probs = probabilities.log_prob(actions)
         # add noise to prevent undefined log of 0
         log_probs -= T.log(1 - action.pow(2) + self.reparameterization_noise)
-        log_probs = log_probs.sum(1, keepdim=True) # If you want to use this change state -> [state] in select_action
+        log_probs = log_probs.sum(1, keepdim=True)
 
-        # log_probs = np.sum(log_probs.detach().numpy(), axis=1)
-
-        # return action, torch.tensor(log_probs).float()
         return action, log_probs
 
     def save_checkpoint(self):
@@ -188,7 +185,7 @@ class Agent:
         self.update_target_network_parameters(tau=1)
 
     def select_action(self, state):
-        state = T.Tensor([state]).to(self.actor_network.device)#[state]
+        state = T.Tensor(state).unsqueeze(0).to(self.actor_network.device)
         actions, _ = self.actor_network.sample_normal(state, reparameterize=False)
 
         return actions.cpu().detach().numpy()[0]
@@ -286,43 +283,45 @@ class Agent:
         self.update_target_network_parameters()
 
 
-def check_intersections(bounding_box, filthy, goals, obstacles, grid):
-    blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
-                          not (bounding_box.x1 >= 0 and bounding_box.x2 <= grid.width and bounding_box.y1 >= 0 and
-                               bounding_box.y2 <= grid.height)
-
-    if blocked:
-        return filthy, goals, blocked, False
-
-    new_filthy = copy.deepcopy(filthy)
-    for i, filth in enumerate(filthy):
-        if filth is not None:
-            if filth.intersect(bounding_box):
-                new_filthy[i] = None
-
-    new_filthy = [i for i in new_filthy if i]
-
-    new_goals = copy.deepcopy(goals)
-    for i, goal in enumerate(goals):
-        if goal is not None:
-            if goal.intersect(bounding_box):
-                new_goals[i] = None
-
-    new_goals = [i for i in new_goals if i]
-
-    if len(new_filthy) == 0 and len(new_goals) == 0:
-        done = True
-    else:
-        done = False
-
-    return new_filthy, new_goals, blocked, done
+# def check_intersections(bounding_box, filthy, goals, obstacles, grid):
+#     blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
+#                           not (bounding_box.x1 >= 0 and bounding_box.x2 <= grid.width and bounding_box.y1 >= 0 and
+#                                bounding_box.y2 <= grid.height)
+#
+#     if blocked:
+#         return filthy, goals, blocked, False
+#
+#     new_filthy = copy.deepcopy(filthy)
+#     for i, filth in enumerate(filthy):
+#         if filth is not None:
+#             if filth.intersect(bounding_box):
+#                 new_filthy[i] = None
+#
+#     new_filthy = [i for i in new_filthy if i]
+#
+#     new_goals = copy.deepcopy(goals)
+#     for i, goal in enumerate(goals):
+#         if goal is not None:
+#             if goal.intersect(bounding_box):
+#                 new_goals[i] = None
+#
+#     new_goals = [i for i in new_goals if i]
+#
+#     if len(new_filthy) == 0 and len(new_goals) == 0:
+#         done = True
+#     else:
+#         done = False
+#
+#     return new_filthy, new_goals, blocked, done
 
 
 # TODO: experiment with gamma, alpha, episodes, steps
 # reward_scale is the most important parameter - entropy comes from it, encourages exploration when it is decreased,
 # encourages exploitation when increased
-def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max_action=1, alpha=0.001, beta=0.001,
-                gamma=0.99, max_size=1000000, tau=0.005, batch_size=256, reward_scale=0.1, load_checkpoint=False):
+# batch_size should be smaller than steps, every #batch_size steps the model learns and updates parameters !!!
+# episodes=7, steps=200
+def robot_epoch(robot, episodes=20, steps=40, state_space=2, action_space=2, max_action=1, alpha=0.001, beta=0.001,
+                gamma=0.99, max_size=1000000, tau=0.005, batch_size=10, reward_scale=2, load_checkpoint=False):
     agent = Agent(state_space, action_space, max_action, alpha, beta, gamma, max_size, tau, batch_size, reward_scale)
 
     best_score = -9999
@@ -334,7 +333,7 @@ def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max
     x_pos, y_pos = robot.pos
 
     for _ in range(episodes):
-        state = np.array([x_pos, y_pos, x_pos+robot.size, y_pos+robot.size])
+        state = np.array([x_pos, y_pos])
         score = 0
         # NEW:
         prior_filthy = copy.deepcopy(robot.grid.filthy)
@@ -345,28 +344,15 @@ def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max
             action = agent.select_action(state)
             new_x_pos = state[0] + action[0]
             new_y_pos = state[1] + action[1]
-            new_state = np.array([new_x_pos, new_y_pos, new_x_pos+robot.size, new_y_pos+robot.size])
+            new_state = np.array([new_x_pos, new_y_pos])
 
-            # calculate reward
-            # check if the new position is possible: not out of bounds and does not intersect obstacle,
-            # if so do not update position
-            new_filthy, new_goals, is_blocked, done = check_intersections(Square(new_x_pos, new_x_pos + robot.size,
-                                                                                 new_y_pos, new_y_pos + robot.size),
-                                                                    prior_filthy, prior_goals, robot.grid.obstacles,
-                                                                    robot.grid)
+            test = SimGrid(robot.grid, prior_filthy, prior_goals)
+            reward, is_blocked, done, new_filthy, new_goals = test.reward(action)
+            score += reward
+
             if is_blocked:
-                # TODO: experiment with different reward
-                reward = -3
-                score += reward
                 agent.store_in_buffer(state, action, reward, state, done)
             else:
-                factor_filthy = len(prior_filthy) - len(new_filthy)
-                factor_goals = len(prior_goals) - len(new_goals)
-                # TODO: experiment with different factors instead of 1 and 2
-                reward = 1*factor_filthy + 3*factor_goals
-
-                score += reward
-
                 agent.store_in_buffer(state, action, reward, new_state, done)
 
                 state = new_state
@@ -391,8 +377,8 @@ def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max
 
         # print('episode ', episode, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
 
-    # obtain the best action from Q for the current state
-    state = np.array([x_pos, y_pos, x_pos+robot.size, y_pos+robot.size])
+    # obtain the best action from the sac agent
+    state = np.array([x_pos, y_pos])
     action = agent.select_action(state)
     robot.direction_vector = (action[0], action[1])
     robot.move()
