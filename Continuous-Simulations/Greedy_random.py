@@ -11,8 +11,8 @@ grid.spawn_robots([Robot(id=1, battery_drain_p=0.2, battery_drain_lam=10)],
                    [(2, 14)])
 
 Potential_moves = [(0.85,0), (0,0.85), (-0.85,0), (0,-0.85),
+                   (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
                     (1.05,0), (0,1.05), (-1.05,0), (0,-1.05),
-                   (0.46,0.46),(-0.46,0.46),(0.46,-0.46),(-0.46,-0.46),
                    (1.06,1.06),(-1.06,1.06),(1.06,-1.06),(-1.06,-1.06)]
 
 while True:
@@ -30,9 +30,13 @@ while True:
             if value>reward:
                 reward = value
                 bestmove = [move]
+                if value > 1:
+                    print(reward)
+                    break
             elif value == reward:
                 bestmove.append(move)
         move = random.sample(bestmove, 1)[0]
+        print(move)
         move = (move[0]/10, move[1]/10)
         robot.direction_vector = move
         robot.move()
