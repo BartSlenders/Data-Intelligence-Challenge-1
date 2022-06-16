@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from torch.distributions import Categorical
 from continuous import Square
 
@@ -12,17 +11,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class ActorCriticNetwork(nn.Module):
 
-    def __init__(self, obs_space, action_space):
-        '''
-        Args:
-        - obs_space (int): observation space
-        - action_space (int): action space
-
-        '''
+    def __init__(self, state_space, action_space):
         super(ActorCriticNetwork, self).__init__()
 
         self.actor = nn.Sequential(
-            nn.Linear(obs_space, 64),
+            nn.Linear(state_space, 64),
             nn.Tanh(),
             nn.Linear(64, 64),
             nn.Tanh(),
@@ -30,27 +23,16 @@ class ActorCriticNetwork(nn.Module):
             nn.Softmax(dim=1))
 
         self.critic = nn.Sequential(
-            nn.Linear(obs_space, 64),
+            nn.Linear(state_space, 64),
             nn.Tanh(),
             nn.Linear(64, 64),
             nn.Tanh(),
             nn.Linear(64, 1))
 
     def forward(self):
-        ''' Not implemented since we call the individual actor and critc networks for forward pass
-        '''
         raise NotImplementedError
 
-    def select_action(self, state):
-        ''' Selects an action given current state
-        Args:
-        - network (Torch NN): network to process state
-        - state (Array): Array of action space in an environment
-
-        Return:
-        - (int): action that is selected
-        - (float): log probability of selecting that action given state and network
-        '''
+    def get_action(self, state):
 
         # convert state to float tensor, add 1 dimension, allocate tensor on device
         state = torch.from_numpy(state).float().unsqueeze(0)
@@ -59,19 +41,13 @@ class ActorCriticNetwork(nn.Module):
         action_probs = self.actor(state)
 
         # sample an action using the probability distribution
-        m = Categorical(action_probs)
-        action = m.sample()
+        categorical_distribution = Categorical(action_probs)
+        action = categorical_distribution.sample()
 
-        # return action
-        return action.item(), m.log_prob(action)
+        # return action, log_prob
+        return action.item(), categorical_distribution.log_prob(action)
 
     def evaluate_action(self, states, actions):
-        ''' Get log probability and entropy of an action taken in given state
-        Args:
-        - states (Array): array of states to be evaluated
-        - actions (Array): array of actions to be evaluated
-
-        '''
 
         # convert state to float tensor, add 1 dimension, allocate tensor on device
         states_tensor = torch.stack([torch.from_numpy(state).float().unsqueeze(0) for state in states]).squeeze(1)
@@ -80,97 +56,52 @@ class ActorCriticNetwork(nn.Module):
         action_probs = self.actor(states_tensor)
 
         # get probability distribution
-        m = Categorical(action_probs)
+        categorical_distribution = Categorical(action_probs)
 
         # return log_prob and entropy
-        return m.log_prob(torch.Tensor(actions)), m.entropy()
+        return categorical_distribution.log_prob(torch.Tensor(actions)), categorical_distribution.entropy()
 
 
-class PPO_policy():
+def check_intersections(bounding_box, filthy, goals, obstacles, grid):
+    blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
+                          not (bounding_box.x1 >= 0 and bounding_box.x2 <= grid.width and bounding_box.y1 >= 0 and
+                               bounding_box.y2 <= grid.height)
 
-    def __init__(self, gamma, epsilon, beta, theta, c1, c2, k_epoch, actor_lr, critic_lr, state_space, action_space):
+    if blocked:
+        return filthy, goals, blocked, False
 
-    def process_rewards(self, rewards, terminals):
-        ''' Converts our rewards history into cumulative discounted rewards
-        Args:
-        - rewards (Array): array of rewards
+    new_filthy = copy.deepcopy(filthy)
+    for i, filth in enumerate(filthy):
+        if filth is not None:
+            if filth.intersect(bounding_box):
+                new_filthy[i] = None
 
-        Returns:
-        - G (Array): array of cumulative discounted rewards
-        '''
-        # Calculate Gt (cumulative discounted rewards)
-        G = []
+    new_filthy = [i for i in new_filthy if i]
 
-        # track cumulative reward
-        total_r = 0
+    new_goals = copy.deepcopy(goals)
+    for i, goal in enumerate(goals):
+        if goal is not None:
+            if goal.intersect(bounding_box):
+                new_goals[i] = None
 
-        # iterate rewards from Gt to G0
-        for r, done in zip(reversed(rewards), reversed(terminals)):
+    new_goals = [i for i in new_goals if i]
 
-            # Base case: G(T) = r(T)
-            # Recursive: G(t) = r(t) + G(t+1)^DISCOUNT
-            total_r = r + total_r * self.γ
+    if len(new_filthy) == 0 and len(new_goals) == 0:
+        done = True
+    else:
+        done = False
 
-            # no future rewards if current step is terminal
-            if done:
-                total_r = r
+    return new_filthy, new_goals, blocked, done
 
-            # add to front of G
-            G.insert(0, total_r)
 
-        # whitening rewards
-        G = torch.tensor(G)
-        G = (G - G.mean()) / G.std()
+def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, actor_lr=0.0003, critic_lr=0.001,
+                episodes=20, steps=40, batch_size=10):
+    actions = [(0.85, 0), (0, 0.85), (-0.85, 0), (0, -0.85),
+               (1.05, 0), (0, 1.05), (-1.05, 0), (0, -1.05),
+               (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
+               (1.06, 1.06), (-1.06, 1.06), (1.06, -1.06), (-1.06, -1.06)]
 
-        return G
-
-    def clipped_update(self):
-        ''' Update policy using clipped surrogate objective
-        '''
-        # get items from trajectory
-        states = [sample[0] for sample in self.batch]
-        actions = [sample[1] for sample in self.batch]
-        rewards = [sample[2] for sample in self.batch]
-        old_lps = [sample[3] for sample in self.batch]
-        terminals = [sample[4] for sample in self.batch]
-
-        # calculate cumulative discounted rewards
-        Gt = self.process_rewards(rewards, terminals)
-
-        # perform k-epoch update
-        for epoch in range(self.k_epoch):
-            # get ratio
-            new_lps, entropies = self.actor_critic.evaluate_action(states, actions)
-
-            ratios = torch.exp(new_lps - torch.Tensor(old_lps))
-
-            # compute advantages
-            states_tensor = torch.stack([torch.from_numpy(state).float().unsqueeze(0) for state in states]).squeeze(1)
-            vals = self.actor_critic.critic(states_tensor).squeeze(1).detach()
-            advantages = Gt - vals
-
-            # clip surrogate objective
-            surrogate1 = torch.clamp(ratios, min=1 - self.ϵ, max=1 + self.ϵ) * advantages
-            surrogate2 = ratios * advantages
-
-            # loss, flip signs since this is gradient descent
-            loss = -torch.min(surrogate1, surrogate2) + self.c1 * F.mse_loss(Gt, vals) - self.c2 * entropies
-
-            self.optimizer.zero_grad()
-            loss.mean().backward()
-            self.optimizer.step()
-
-        # clear batch buffer
-        self.batch = []
-
-def robot_epoch(robot, gamma=0.99, epsilon=0.2, beta=1, theta=0.01, c1=0.5, c2=0.01, k_epoch=40, actor_lr = 0.0003,
-                critic_lr = 0.001, episodes=20, steps=40):
-    actions = [(0.1,0), (0,0.1), (-0.1,0), (0,-0.1),
-                    (0.2,0), (0,0.2), (-0.2,0), (0,-0.2),
-                   (0.1,0.1),(-0.1,0.1),(0.1,-0.1),(-0.1,-0.1),
-                   (0.2,0.2),(-0.2,0.2),(0.2,-0.2),(-0.2,-0.2)]
-
-    actor_critic = ActorCriticNetwork(state_space=4, action_space=2)
+    actor_critic = ActorCriticNetwork(state_space=4, action_space=len(actions))
 
     optimizer = torch.optim.Adam([
         {'params': actor_critic.actor.parameters(), 'lr': actor_lr},
@@ -180,10 +111,9 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, beta=1, theta=0.01, c1=0.5, c2=0
 
     counter = 0
 
-    for _ in range(episodes):
-        episode = []
+    for _ in range(1, episodes+1):
+        batch = []
         state = np.array([x_pos, y_pos, x_pos + robot.size, y_pos + robot.size])
-        # NEW:
         prior_filthy = copy.deepcopy(robot.grid.filthy)
         prior_goals = copy.deepcopy(robot.grid.goals)
 
@@ -205,73 +135,82 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, beta=1, theta=0.01, c1=0.5, c2=0
 
             if is_blocked:
                 reward = -2
-                episode.append([state, action_id, reward, log_prob])
+                batch.append([state, action_id, reward, log_prob, done])
             else:
                 factor_filthy = len(prior_filthy) - len(new_filthy)
                 factor_goals = len(prior_goals) - len(new_goals)
                 reward = 1 * factor_filthy + 3 * factor_goals
 
-                episode.append([new_state, action_id, reward, log_prob])
+                batch.append([new_state, action_id, reward, log_prob, done])
 
                 state = new_state
                 prior_filthy = new_filthy
                 prior_goals = new_goals
 
-            if counter % batch_size
+            # learn
+            if counter % batch_size == 0:
+                # create lists to store batch items
+                states = []
+                action_ids = []
+                rewards = []
+                old_log_probs = []
+                terminals = []
 
-            states = []
-            rewards = []
-            log_probs = []
+                # get batch items
+                for step in batch:
+                    states.append(step[0])
+                    action_ids.append(step[1])
+                    rewards.append(step[2])
+                    old_log_probs.append(step[3])
+                    terminals.append(step[4])
 
-            for step in episode:
-                states.append(step[0])
-                rewards.append(step[2])
-                log_probs.append(step[3])
+                G = []
+                reward_sum = 0
 
-            G = []
-            reward_sum = 0
+                # iterate rewards, dones backwards
+                for reward, done in zip(rewards[::-1], terminals[::-1]):
+                    reward_sum = reward + reward_sum * gamma
+                    # no future rewards if nothing left to clean
+                    if done:
+                        reward_sum = reward
 
-            for reward in rewards[::-1]:
-                reward_sum = reward + reward_sum * gamma
-                G.append(reward_sum)
+                    G.append(reward_sum)
 
-            G = G[::-1]
+                G = G[::-1]
+                G = torch.tensor(G).to(device)
 
-            # whitening rewards
-            G = torch.tensor(G).to(device)
-            if G.std().item() != 0:
-                G = (G - G.mean()) / G.std()
+                if G.std().item() != 0:
+                    G = (G - G.mean()) / G.std()
 
-            value_estimates = []
-            for state in states:
-                state = torch.Tensor(state).float().unsqueeze(0).to(device)
-                value_estimates.append(value_network(state))
+                # perform k-epoch update
+                for epoch in range(k_epoch):
+                    # get ratio
+                    new_log_probs, entropies = actor_critic.evaluate_action(states, action_ids)
+                    ratios = torch.exp(new_log_probs - torch.Tensor(old_log_probs))
 
-            value_estimates = torch.stack(value_estimates).squeeze()
+                    # compute advantages
+                    states_tensor = []
+                    for state in states:
+                        states_tensor.append(torch.from_numpy(state).float().unsqueeze(0))
+                    states_tensor = torch.stack(states_tensor).squeeze(1)
+                    value_estimates = actor_critic.critic(states_tensor).squeeze(1).detach()
+                    advantages = G - value_estimates
 
-            # Train value network
-            value_loss = F.mse_loss(value_estimates, G)
+                    # clip surrogate objective
+                    surrogate1 = torch.clamp(ratios, min=1 - epsilon, max=1 + epsilon) * advantages
+                    surrogate2 = ratios * advantages
 
-            # backpropagate loss
-            value_optimizer.zero_grad()
-            value_loss.backward()
-            value_optimizer.step()
+                    # compute loss
+                    # add minus for gradient ascent
+                    loss = -torch.min(surrogate1, surrogate2) + c1 * F.mse_loss(G, value_estimates) - c2 * entropies
 
-            # Train policy network
-            deltas = [g_t - estimate for g_t, estimate in zip(G, value_estimates)]
-            deltas = torch.tensor(deltas).to(device)
+                    # backpropagate loss
+                    optimizer.zero_grad()
+                    loss.mean().backward()
+                    optimizer.step()
 
-            policy_loss = []
-
-            # calculate policy loss
-            for delta, log_prob in zip(deltas, log_probs):
-                # add minus for gradient ascent
-                policy_loss.append(-delta * log_prob)
-
-            # backpropagate loss
-            policy_optimizer.zero_grad()
-            sum(policy_loss).backward()
-            policy_optimizer.step()
+                # clear batch buffer
+                batch = []
 
             if done:
                 break
@@ -279,7 +218,7 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, beta=1, theta=0.01, c1=0.5, c2=0
     # obtain the best action from Q for the current state
     state = np.array([x_pos, y_pos, x_pos + robot.size, y_pos + robot.size])
     # print('state '+str(state))
-    action_id, _ = policy_network.get_action(state)
+    action_id, _ = actor_critic.get_action(state)
     print('action ' + str(actions[action_id]))
     robot.direction_vector = actions[action_id]
     robot.move()

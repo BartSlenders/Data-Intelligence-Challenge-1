@@ -176,6 +176,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
         G = []
         reward_sum = 0
 
+        # iterate rewards backwards
         for reward in rewards[::-1]:
             reward_sum = reward + reward_sum * gamma
             G.append(reward_sum)
