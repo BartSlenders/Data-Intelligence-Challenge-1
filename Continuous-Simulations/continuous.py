@@ -172,7 +172,7 @@ class Grid:
                     new_filthy.remove(new_filthy[i])
 
         new_goals = deepcopy(self.goals)
-        for i, goal in enumerate(goals):
+        for i, goal in enumerate(self.goals):
             if goal is not None:
                 if goal.intersect(bounding_box):
                     new_goals.remove(new_goals[i])

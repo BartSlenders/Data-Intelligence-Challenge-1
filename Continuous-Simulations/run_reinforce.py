@@ -18,6 +18,10 @@ while True:
         # To avoid deadlocks, only try to move alive robots:
         if robot.alive:
             robot_epoch(robot=robot)
+            cleanpercent, batteryleft = grid.evaluate()
+            print('the floor is', cleanpercent, 'percent clean')
+            print('there is', batteryleft, 'of the battery left')
+
 cleanpercent, batteryleft = grid.evaluate()
 print('the floor is', cleanpercent, 'percent clean')
 print('there is', batteryleft, 'of the battery left')

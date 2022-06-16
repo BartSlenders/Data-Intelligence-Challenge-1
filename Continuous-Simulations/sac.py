@@ -11,17 +11,17 @@ from continuous import Square
 
 
 class ReplayBuffer:
-    def __init__(self, max_size, state_space, action_space):
-        self.mem_size = max_size
-        self.mem_cntr = 0
-        self.state_memory = np.zeros((self.mem_size, state_space))
-        self.new_state_memory = np.zeros((self.mem_size, state_space))
-        self.action_memory = np.zeros((self.mem_size, action_space))
-        self.reward_memory = np.zeros(self.mem_size)
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
+    def __init__(self, max_memory_size, state_space, action_space):
+        self.memory_size = max_memory_size
+        self.memory_counter = 0
+        self.state_memory = np.zeros((self.memory_size, state_space))
+        self.new_state_memory = np.zeros((self.memory_size, state_space))
+        self.action_memory = np.zeros((self.memory_size, action_space))
+        self.reward_memory = np.zeros(self.memory_size)
+        self.terminal_memory = np.zeros(self.memory_size, dtype=np.bool)
 
     def store_transition(self, state, action, reward, new_state, done):
-        index = self.mem_cntr % self.mem_size
+        index = self.memory_counter % self.memory_size
 
         self.state_memory[index] = state
         self.new_state_memory[index] = new_state
@@ -29,45 +29,45 @@ class ReplayBuffer:
         self.reward_memory[index] = reward
         self.terminal_memory[index] = done
 
-        self.mem_cntr += 1
+        self.memory_counter += 1
 
     def sample_buffer(self, batch_size):
-        max_mem = min(self.mem_cntr, self.mem_size)
-
-        batch = np.random.choice(max_mem, batch_size)
+        max_memory = min(self.memory_counter, self.memory_size)
+        batch = np.random.choice(max_memory, batch_size)
 
         states = self.state_memory[batch]
-        states_ = self.new_state_memory[batch]
+        new_states = self.new_state_memory[batch]
         actions = self.action_memory[batch]
         rewards = self.reward_memory[batch]
         dones = self.terminal_memory[batch]
 
-        return states, actions, rewards, states_, dones
+        return states, actions, rewards, new_states, dones
 
 
 class CriticNetwork(nn.Module):
-    def __init__(self, beta, state_space, action_space, fc1_dims=256, fc2_dims=256, name='critic', chkpt_dir='tmp/sac'):
+    def __init__(self, beta, state_space, action_space, fc1_dims=256, fc2_dims=256, name='critic',
+                 checkpoint_dir='tmp/sac'):
         super(CriticNetwork, self).__init__()
 
         self.fc1 = nn.Linear(state_space+action_space, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
-        self.q = nn.Linear(fc2_dims, 1)
+        self.q_layer = nn.Linear(fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-        self.checkpoint_file = os.path.join(chkpt_dir, name + '_sac')
+        self.checkpoint_file = os.path.join(checkpoint_dir, name + '_sac')
 
         self.to(self.device)
 
     def forward(self, state, action):
-        action_value = self.fc1(T.cat([state, action], dim=1))
-        action_value = F.relu(action_value)
-        action_value = self.fc2(action_value)
-        action_value = F.relu(action_value)
+        x = self.fc1(T.cat([state, action], dim=1))
+        x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
 
-        q = self.q(action_value)
+        q_estimate = self.q_layer(x)
 
-        return q
+        return q_estimate
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
@@ -77,28 +77,28 @@ class CriticNetwork(nn.Module):
 
 
 class ValueNetwork(nn.Module):
-    def __init__(self, beta, state_space, fc1_dims=256, fc2_dims=256, name='value', chkpt_dir='tmp/sac'):
+    def __init__(self, beta, state_space, fc1_dims=256, fc2_dims=256, name='value', checkpoint_dir='tmp/sac'):
         super(ValueNetwork, self).__init__()
 
         self.fc1 = nn.Linear(state_space, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
-        self.v = nn.Linear(fc2_dims, 1)
+        self.value_layer = nn.Linear(fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-        self.checkpoint_file = os.path.join(chkpt_dir, name + '_sac')
+        self.checkpoint_file = os.path.join(checkpoint_dir, name + '_sac')
 
         self.to(self.device)
 
     def forward(self, state):
-        state = self.fc1(state)
-        state = F.relu(state)
-        state = self.fc2(state)
-        state = F.relu(state)
+        x = self.fc1(state)
+        x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
 
-        output = self.v(state)
+        value_estimate = self.value_layer(x)
 
-        return output
+        return value_estimate
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
@@ -108,50 +108,55 @@ class ValueNetwork(nn.Module):
 
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, state_space, action_space, max_action, fc1_dims=256, fc2_dims=256, name='actor',
-                 chkpt_dir='tmp/sac'):
+    def __init__(self, alpha, state_space, action_space, max_action_value, fc1_dims=256, fc2_dims=256, name='actor',
+                 checkpoint_dir='tmp/sac'):
         super(ActorNetwork, self).__init__()
 
         self.fc1 = nn.Linear(state_space, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
-        self.mu = nn.Linear(fc2_dims, action_space)
-        self.sigma = nn.Linear(fc2_dims, action_space)
+        self.mean = nn.Linear(fc2_dims, action_space)
+        self.std = nn.Linear(fc2_dims, action_space)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-
-        self.checkpoint_file = os.path.join(chkpt_dir, name+'_sac')
-        self.reparam_noise = 1e-6
-        self.max_action = max_action
-
+        self.checkpoint_file = os.path.join(checkpoint_dir, name+'_sac')
+        self.reparameterization_noise = 1e-6
+        self.max_action_value = max_action_value
         self.to(self.device)
 
     def forward(self, state):
-        prob = self.fc1(state)
-        prob = F.relu(prob)
-        prob = self.fc2(prob)
-        prob = F.relu(prob)
+        x = self.fc1(state)
+        x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
 
-        mu = self.mu(prob)
-        sigma = self.sigma(prob)
-        sigma = T.clamp(sigma, min=self.reparam_noise, max=1)
+        mean = self.mean(x)
+        std = self.std(x)
+        # fix width of distribution in range [1e-6, 1]
+        std = T.clamp(std, min=self.reparameterization_noise, max=1)
 
-        return mu, sigma
+        return mean, std
 
     def sample_normal(self, state, reparameterize=True):
-        mu, sigma = self.forward(state)
-        probabilities = Normal(mu, sigma)
+        mean, std = self.forward(state)
+        probabilities = Normal(mean, std)
 
         if reparameterize:
+            # add noise for exploration
             actions = probabilities.rsample()
         else:
             actions = probabilities.sample()
 
         # https: // arxiv.org / pdf / 1812.05905.pdf appendix section c
-        action = T.tanh(actions)*T.tensor(self.max_action).to(self.device)
+        # use invertable squashing function to bound actions to a finite interval and
+        # multiply by max_action_value to fix action in the appropriate range
+        action = T.tanh(actions)*T.tensor(self.max_action_value).to(self.device)
+        # get log of the probabilities for the computation of the loss
         log_probs = probabilities.log_prob(actions)
-        log_probs -= T.log(1-action.pow(2)+self.reparam_noise)
+        # add noise to prevent undefined log of 0
+        log_probs -= T.log(1 - action.pow(2) + self.reparameterization_noise)
         log_probs = log_probs.sum(1, keepdim=True) # If you want to use this change state -> [state] in select_action
+
         # log_probs = np.sum(log_probs.detach().numpy(), axis=1)
 
         # return action, torch.tensor(log_probs).float()
@@ -169,9 +174,9 @@ class Agent:
                  reward_scale):
         self.gamma = gamma
         self.tau = tau
-        self.memory = ReplayBuffer(max_size, state_space, action_space)
+        self.buffer = ReplayBuffer(max_size, state_space, action_space)
         self.batch_size = batch_size
-        self.n_actions = action_space
+        self.action_space = action_space
 
         self.actor_network = ActorNetwork(alpha, state_space, action_space, max_action)
         self.critic_network_1 = CriticNetwork(beta, state_space, action_space, name='critic_1')
@@ -188,10 +193,9 @@ class Agent:
 
         return actions.cpu().detach().numpy()[0]
 
-    def remember(self, state, action, reward, new_state, done):
-        self.memory.store_transition(state, action, reward, new_state, done)
+    def store_in_buffer(self, state, action, reward, new_state, done):
+        self.buffer.store_transition(state, action, reward, new_state, done)
 
-    # rename to update target network parameters
     def update_target_network_parameters(self, tau=None):
         if tau is None:
             tau = self.tau
@@ -223,11 +227,22 @@ class Agent:
         self.critic_network_2.load_checkpoint()
 
     def learn(self):
-        if self.memory.mem_cntr < self.batch_size:
+
+        def get_critic_value_and_log_probs():
+            actions, log_probs = self.actor_network.sample_normal(state, reparameterize=False)
+            log_probs = log_probs.view(-1)
+            q1_new_policy = self.critic_network_1(state, actions)
+            q2_new_policy = self.critic_network_2(state, actions)
+            critic_value = T.min(q1_new_policy, q2_new_policy)
+            critic_value = critic_value.view(-1)
+
+            return critic_value, log_probs
+
+        if self.buffer.memory_counter < self.batch_size:
             return
 
         state, action, reward, new_state, done = \
-            self.memory.sample_buffer(self.batch_size)
+            self.buffer.sample_buffer(self.batch_size)
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor_network.device)
         done = T.tensor(done).to(self.actor_network.device)
@@ -239,13 +254,7 @@ class Agent:
         target_value = self.target_value_network(new_state).view(-1)
         target_value[done] = 0.0
 
-        # this block repeats later -> can be put in a functions to remove duplication
-        actions, log_probs = self.actor_network.sample_normal(state, reparameterize=False)
-        log_probs = log_probs.view(-1)
-        q1_new_policy = self.critic_network_1(state, actions)
-        q2_new_policy = self.critic_network_2(state, actions)
-        critic_value = T.min(q1_new_policy, q2_new_policy)
-        critic_value = critic_value.view(-1)
+        critic_value, log_probs = get_critic_value_and_log_probs()
 
         self.value_network.optimizer.zero_grad()
         value_target = critic_value - log_probs
@@ -253,13 +262,7 @@ class Agent:
         value_loss.backward(retain_graph=True)
         self.value_network.optimizer.step()
 
-        # this block repeats above -> can be put in a functions to remove duplication
-        actions, log_probs = self.actor_network.sample_normal(state, reparameterize=True)
-        log_probs = log_probs.view(-1)
-        q1_new_policy = self.critic_network_1(state, actions)
-        q2_new_policy = self.critic_network_2(state, actions)
-        critic_value = T.min(q1_new_policy, q2_new_policy)
-        critic_value = critic_value.view(-1)
+        critic_value, log_probs = get_critic_value_and_log_probs()
 
         actor_loss = log_probs - critic_value
         actor_loss = T.mean(actor_loss)
@@ -269,11 +272,11 @@ class Agent:
 
         self.critic_network_1.optimizer.zero_grad()
         self.critic_network_2.optimizer.zero_grad()
-        q_hat = self.scale * reward + self.gamma * target_value
+        q_estimate = self.scale * reward + self.gamma * target_value
         q1_old_policy = self.critic_network_1(state, action).view(-1)
         q2_old_policy = self.critic_network_2(state, action).view(-1)
-        critic_1_loss = 0.5 * F.mse_loss(q1_old_policy, q_hat)
-        critic_2_loss = 0.5 * F.mse_loss(q2_old_policy, q_hat)
+        critic_1_loss = 0.5 * F.mse_loss(q1_old_policy, q_estimate)
+        critic_2_loss = 0.5 * F.mse_loss(q2_old_policy, q_estimate)
 
         critic_loss = critic_1_loss + critic_2_loss
         critic_loss.backward()
@@ -289,20 +292,23 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
                                bounding_box.y2 <= grid.height)
 
     if blocked:
-        # NEW:
         return None, None, blocked, None
 
     new_filthy = copy.deepcopy(filthy)
     for i, filth in enumerate(filthy):
         if filth is not None:
             if filth.intersect(bounding_box):
-                new_filthy.remove(new_filthy[i])
+                new_filthy[i] = None
+
+    new_filthy = [i for i in new_filthy if i]
 
     new_goals = copy.deepcopy(goals)
     for i, goal in enumerate(goals):
         if goal is not None:
             if goal.intersect(bounding_box):
-                new_goals.remove(new_goals[i])
+                new_goals[i] = None
+
+    new_goals = [i for i in new_goals if i]
 
     if len(new_filthy) == 0 and len(new_goals) == 0:
         done = True
@@ -315,8 +321,8 @@ def check_intersections(bounding_box, filthy, goals, obstacles, grid):
 # TODO: experiment with gamma, alpha, episodes, steps
 # reward_scale is the most important parameter - entropy comes from it, encourages exploration when it is decreased,
 # encourages exploitation when increased
-def robot_epoch(robot, episodes=20, steps=20, state_space=4, action_space=2, max_action=0.2, alpha=0.0003, beta=0.0003,
-                gamma=0.99, max_size=1000000, tau=0.005, batch_size=256, reward_scale=2):
+def robot_epoch(robot, episodes=7, steps=200, state_space=4, action_space=2, max_action=1, alpha=0.001, beta=0.001,
+                gamma=0.99, max_size=1000000, tau=0.005, batch_size=256, reward_scale=0.1):
     agent = Agent(state_space, action_space, max_action, alpha, beta, gamma, max_size, tau, batch_size, reward_scale)
 
     best_score = -9999
@@ -354,16 +360,16 @@ def robot_epoch(robot, episodes=20, steps=20, state_space=4, action_space=2, max
                 # TODO: experiment with different reward
                 reward = -2
                 score += reward
-                agent.remember(state, action, reward, state, done)
+                agent.store_in_buffer(state, action, reward, state, done)
             else:
                 factor_filthy = len(prior_filthy) - len(new_filthy)
                 factor_goals = len(prior_goals) - len(new_goals)
                 # TODO: experiment with different factors instead of 1 and 2
-                reward = 1*factor_filthy + 2*factor_goals
+                reward = 1*factor_filthy + 3*factor_goals
 
                 score += reward
 
-                agent.remember(state, action, reward, new_state, done)
+                agent.store_in_buffer(state, action, reward, new_state, done)
 
                 state = new_state
                 prior_filthy = new_filthy
