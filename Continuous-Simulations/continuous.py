@@ -295,10 +295,12 @@ def parse_config(file, divideby = 1):
                             else:
                                 raise ValueError(f"Unkown type '{typ}'.")
             # the baseline grid is fully defined here
-            #TODO: use the divideby variable to put filth smaller
+            divided = 1/divideby
             for i in range(grid.width):
                 for j in range(grid.height):
-                    grid.put_filth(i,j)
+                    for f in range(divideby):
+                        for g in range(divideby):
+                            grid.put_filth(f*divided + i, g*divided + j, size_x=divided, size_y=divided)
 
             return grid
 

@@ -6,7 +6,7 @@ from copy import deepcopy
 
 plt.ion()
 
-grid = parse_config('random_house_0.grid')
+grid = parse_config('random_house_0.grid', divideby=2)
 grid.spawn_robots([Robot(id=1, battery_drain_p=0.2, battery_drain_lam=10)],
                    [(2, 14)])
 
@@ -36,8 +36,6 @@ while True:
         move = (move[0]/10, move[1]/10)
         robot.direction_vector = move
         robot.move()
-
-
 
 cleanpercent, batteryleft = grid.evaluate()
 print('the floor is', cleanpercent, 'percent clean')
