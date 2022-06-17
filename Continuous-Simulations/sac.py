@@ -320,8 +320,8 @@ class Agent:
 # encourages exploitation when increased
 # batch_size should be smaller than steps, every #batch_size steps the model learns and updates parameters !!!
 # episodes=7, steps=200
-def robot_epoch(robot, episodes=20, steps=40, state_space=2, action_space=2, max_action=1, alpha=0.001, beta=0.001,
-                gamma=0.99, max_size=1000000, tau=0.005, batch_size=10, reward_scale=2, load_checkpoint=False):
+def robot_epoch(robot, gamma=0.99, alpha=0.001, episodes=20, steps=40, state_space=2, action_space=2, max_action=1, beta=0.001,
+                 max_size=1000000, tau=0.005, batch_size=10, reward_scale=2, load_checkpoint=False):
     agent = Agent(state_space, action_space, max_action, alpha, beta, gamma, max_size, tau, batch_size, reward_scale)
 
     best_score = -9999
