@@ -7,7 +7,7 @@ import torch.optim as optim
 from torch.distributions.normal import Normal
 import numpy as np
 import copy
-from continuous import SimGrid
+from continuous import SimGridComplex as SimGrid
 
 
 class ReplayBuffer:
@@ -346,7 +346,7 @@ def robot_epoch(robot, episodes=20, steps=40, state_space=2, action_space=2, max
             new_y_pos = state[1] + action[1]
             new_state = np.array([new_x_pos, new_y_pos])
 
-            test = SimGrid(robot.grid, prior_filthy, prior_goals)
+            test = SimGrid(new_state, robot.grid, prior_filthy, prior_goals)
             reward, is_blocked, done, new_filthy, new_goals = test.reward(action)
             score += reward
 

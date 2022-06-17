@@ -60,15 +60,16 @@ class Square:
     #             return True
     #     return False
 
+
 class SimGrid:
     """A different grid to make copies of the existing grid,
     mainly to calculate rewards and simulate it more discretely"""
-    def __init__(self, grid, prior_filthy, prior_goals):
+    def __init__(self, grid):
         self.width = grid.width
         self.height = grid.height
         self.obstacles = grid.obstacles
-        self.goals = prior_goals
-        self.filthy = prior_filthy
+        self.goals = grid.goals
+        self.filthy = grid.filthy
         self.robot = grid.robots[0]
         self.goal_lines = grid.goal_lines
         self.filthy_lines = grid.filthy_lines
@@ -85,7 +86,71 @@ class SimGrid:
         In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used"""
         self.move_robot(directionvector)
         reward = 0
-        is_blocked = False
+        for goal in self.goals:
+            if goal != None:
+                if self.robot.intersect(goal):
+                    reward += 3
+        for filthy in self.filthy:
+            if filthy != None:
+                if self.robot.intersect(filthy):
+                    reward += 1
+        for obstacle in self.obstacles:
+            if obstacle != None:
+                if self.robot.intersect(obstacle):
+                    reward -= 3
+        # put the robot back in its original position
+        self.move_robot((-directionvector[0], -directionvector[1]))
+        # # the second loop is to check if our corners go over obstacles between the move
+        # for obstacle in self.obstacles:
+        #     robotcorners = [(self.robot.pos[0],self.robot.pos[1]),
+        #                     (self.robot.pos[0]+directionvector[0],self.robot.pos[1]),
+        #                     (self.robot.pos[0],self.robot.pos[1]+directionvector[1]),
+        #                     (self.robot.pos[0]+directionvector[0],self.robot.pos[1]+directionvector[1])]
+        #     lines = [(x1, x1+directionvector[0], y1, y1+directionvector[1]) for x1, y1 in robotcorners]
+        #     for line in lines:
+        #         if obstacle.line_intersect(line):
+        #             reward -= 3
+        return reward
+
+    def something(self):
+        pass
+
+
+class SimGridComplex:
+    """A different grid to make copies of the existing grid,
+    mainly to calculate rewards and simulate it more discretely"""
+    def __init__(self, new_state, grid, prior_filthy, prior_goals):
+        self.width = grid.width
+        self.height = grid.height
+        self.obstacles = grid.obstacles
+        self.goals = prior_goals
+        self.filthy = prior_filthy
+        self.robot = grid.robots[0]
+        self.goal_lines = grid.goal_lines
+        self.filthy_lines = grid.filthy_lines
+        self.robot_lines = grid.robot_lines[0]
+        self.new_state = new_state
+
+    def move_robot(self, directionvector):
+        """"this function will move the robot, not by actually moving,
+        but by teleporting it forward by the directionvector
+        right now, we do not yet remove reward tiles"""
+        self.robot.pos = (self.robot.pos[0] + directionvector[0], self.robot.pos[1] + directionvector[1])
+
+    def reward(self, directionvector):
+        """"this function will return the reward of a move
+        In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used"""
+        self.move_robot(directionvector)
+        reward = 0
+
+        is_blocked = not (self.new_state[0] >= 0 and self.new_state[0] + self.robot.size <= self.width and
+                          self.new_state[1] >= 0 and self.new_state[1] + self.robot.size <= self.height)
+
+        if is_blocked:
+            # put the robot back in its original position
+            self.move_robot((-directionvector[0], -directionvector[1]))
+
+            return -3, is_blocked, False, self.filthy, self.goals
 
         goals_to_remove = []
         for i, goal in enumerate(self.goals):
@@ -96,13 +161,13 @@ class SimGrid:
 
         filthy_to_remove = []
         for i, filthy in enumerate(self.filthy):
-            if filthy != None:
+            if filthy is not None:
                 if self.robot.intersect(filthy):
                     reward += 1
                     filthy_to_remove.append(i)
 
         for obstacle in self.obstacles:
-            if obstacle != None:
+            if obstacle is not None:
                 if self.robot.intersect(obstacle):
                     is_blocked = True
                     reward -= 3
@@ -116,21 +181,7 @@ class SimGrid:
 
         # put the robot back in its original position
         self.move_robot((-directionvector[0], -directionvector[1]))
-        # # the second loop is to check if our corners go over obstacles between the move
-        # for obstacle in self.obstacles:
-        #     robotcorners = [(self.robot.pos[0],self.robot.pos[1]),
-        #                     (self.robot.pos[0]+directionvector[0],self.robot.pos[1]),
-        #                     (self.robot.pos[0],self.robot.pos[1]+directionvector[1]),
-        #                     (self.robot.pos[0]+directionvector[0],self.robot.pos[1]+directionvector[1])]
-        #     lines = [(x1, x1+directionvector[0], y1, y1+directionvector[1]) for x1, y1 in robotcorners]
-        #     for line in lines:
-        #         if obstacle.line_intersect(line):
-        #             reward -= 3
         return reward, is_blocked, done, new_filthy, new_goals
-
-    def something(self):
-        pass
-
 
 
 class Grid:
@@ -182,10 +233,13 @@ class Grid:
 
     def check_goals(self, robot):
         for i, goal in enumerate(self.goals):
-            if goal != None:
+            if goal is not None:
                 if goal.intersect(robot.bounding_box):
                     self.goals[i] = None
                     self.goal_lines[i].set_data(None, None)
+
+        self.goals = [i for i in self.goals if i]
+        self.goal_lines = [i for i in self.goal_lines if i.get_data()[0] is not None and i.get_data()[1] is not None]
 
     def put_filth(self, x, y, size_x=1, size_y=1):
         assert self.is_in_bounds(x, y, size_x, size_y)
@@ -204,10 +258,13 @@ class Grid:
 
     def check_filth(self, robot):
         for i, filth in enumerate(self.filthy):
-            if filth != None:
+            if filth is not None:
                 if filth.intersect(robot.bounding_box):
                     self.filthy[i] = None
                     self.filthy_lines[i].set_data(None, None)
+
+        self.filthy = [i for i in self.filthy if i]
+        self.filthy_lines = [i for i in self.filthy_lines if i.get_data()[0] is not None and i.get_data()[1] is not None]
 
     def is_blocked(self, robot):
         blocked_by_obstacle = any([ob.intersect(robot.bounding_box) for ob in self.obstacles])
@@ -252,10 +309,12 @@ class Grid:
         plt.draw()
         plt.pause(0.0001)
 
-    def evaluate(self):
-        maxscore = len(self.goals)*3 + len(self.filthy)
+    def evaluate(self, max_filthy, max_goals):
+        maxscore = max_goals*3 + max_filthy
+        print(max_filthy, max_goals)
         goals = [i for i in self.goals if i is not None]
         filthy = [i for i in self.filthy if i is not None]
+        print(len(goals),len(filthy))
         score = len(goals)*3 + len(filthy)
         cleanpercent = 100 - (score/maxscore*100)
         batteryleft = sum([i.battery_lvl for i in self.robots])/len(self.robots)

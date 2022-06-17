@@ -10,6 +10,9 @@ grid = parse_config('random_house_0.grid', divideby=1)
 grid.spawn_robots([Robot(id=1, battery_drain_p=1, battery_drain_lam=0.5)],
                    [(0, 0)])
 
+max_filthy = len(grid.filthy)
+max_goals = len(grid.goals)
+
 Potential_moves = [(0.85,0), (0,0.85), (-0.85,0), (0,-0.85),
                    (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
                     (1.05,0), (0,1.05), (-1.05,0), (0,-1.05),
@@ -41,7 +44,7 @@ while True:
         robot.direction_vector = move
         robot.move()
 
-cleanpercent, batteryleft = grid.evaluate()
+cleanpercent, batteryleft = grid.evaluate(max_filthy, max_goals)
 print('the floor is', cleanpercent, 'percent clean')
 print('there is', batteryleft, 'of the battery left')
 grid.plot_grid()

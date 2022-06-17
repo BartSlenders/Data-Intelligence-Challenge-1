@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
-from continuous import SimGrid
+from continuous import SimGridComplex as SimGrid
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -113,7 +113,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
             new_y_pos = state[1] + actions[action_id][1]
             new_state = np.array([new_x_pos, new_y_pos])
 
-            test = SimGrid(robot.grid, prior_filthy, prior_goals)
+            test = SimGrid(new_state, robot.grid, prior_filthy, prior_goals)
             reward, is_blocked, done, new_filthy, new_goals = test.reward(actions[action_id])
 
             if is_blocked:
@@ -125,7 +125,7 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
                 prior_filthy = new_filthy
                 prior_goals = new_goals
 
-            #print('filthy: ', len(new_filthy), 'state: ', state, 'action: ', actions[action_id])
+            #print('filthy: ', len(new_filthy), 'state: ', state, 'action: ', actions[action_id], 'blocked: ', is_blocked)
 
             if done:
                 break

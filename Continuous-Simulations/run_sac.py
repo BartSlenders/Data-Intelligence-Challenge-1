@@ -3,14 +3,17 @@ import time
 import matplotlib.pyplot as plt
 from sac import robot_epoch
 
-plt.ion()
+#plt.ion()
 
 grid = parse_config('random_house_0.grid')
 grid.spawn_robots([Robot(id=1, battery_drain_p=1, battery_drain_lam=0.5)],
                   [(0, 0), (1, 6), (2, 14)])
 
+max_filthy = len(grid.filthy)
+max_goals = len(grid.goals)
+
 while True:
-    grid.plot_grid()
+    #grid.plot_grid()
     # Stop simulation if all robots died:
     if all([not robot.alive for robot in grid.robots]):
         break
@@ -18,9 +21,9 @@ while True:
         # To avoid deadlocks, only try to move alive robots:
         if robot.alive:
             robot_epoch(robot=robot)
-            cleanpercent, batteryleft = grid.evaluate()
+            cleanpercent, batteryleft = grid.evaluate(max_filthy, max_goals)
             print('the floor is', cleanpercent, 'percent clean')
             print('there is', batteryleft, 'of the battery left')
 
-grid.plot_grid()
-time.sleep(3)
+# grid.plot_grid()
+# time.sleep(3)
