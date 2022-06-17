@@ -70,7 +70,7 @@ def generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, ste
                                     cleaned = run(gamma=g, alpha=a, beta=b, batch_size=batch, reward_scale=reward,
                                                   episodes=episode, steps=s)
                                     rows.append([g, a, b, batch, reward, episode, s, cleaned])
-                                print('\tcleaned:', cleaned)
+                                    print('\tcleaned:', cleaned)
     my_array = np.array(rows)
     df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'beta', 'batch_size', 'reward_scale', 'episodes', 'steps',
                                          'cleaned'])

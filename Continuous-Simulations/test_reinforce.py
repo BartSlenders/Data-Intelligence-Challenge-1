@@ -64,7 +64,7 @@ def generate_results(gamma, alpha, episodes, steps, runs_per_combination=3):
                     for i in range(runs_per_combination):
                         cleaned = run(gamma=g, alpha=a, episodes=episode, steps=s)
                         rows.append([g, a, episode, s, cleaned])
-                    print('\tcleaned:', cleaned)
+                        print('\tcleaned:', cleaned)
     my_array = np.array(rows)
     df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'episodes', 'steps', 'cleaned'])
     df.to_csv("reinforce_results.csv")

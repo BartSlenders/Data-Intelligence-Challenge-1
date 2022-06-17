@@ -72,7 +72,7 @@ def generate_results(gamma, epsilon, c1, c2, k_epoch, actor_lr, critic_lr, episo
                                         for i in range(runs_per_combination):
                                             cleaned = run(g, e, c_1, c_2, epoch, a_lr, c_lr, episode, s)
                                             rows.append([g, e, c_1, c_2, epoch, a_lr, c_lr, episode, s, cleaned])
-                                        print('\tcleaned:', cleaned)
+                                            print('\tcleaned:', cleaned)
     my_array = np.array(rows)
     df = pd.DataFrame(my_array, columns=['gamma', 'epsilon', 'c1', 'c2', 'k_epoch', 'actor_lr', 'critic_lr', 'episodes',
                                          'steps', 'cleaned'])
