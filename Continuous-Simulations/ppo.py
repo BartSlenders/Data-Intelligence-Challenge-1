@@ -95,7 +95,7 @@ class ActorCriticNetwork(nn.Module):
 
 
 def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, actor_lr=0.0003, critic_lr=0.001,
-                episodes=20, steps=40, batch_size=10):
+                batch_size=10, episodes=20, steps=40):
     actions = [(0.85, 0), (0, 0.85), (-0.85, 0), (0, -0.85),
                (1.05, 0), (0, 1.05), (-1.05, 0), (0, -1.05),
                (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
@@ -214,6 +214,6 @@ def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, act
     state = np.array([x_pos, y_pos])
     # print('state '+str(state))
     action_id, _ = actor_critic.get_action(state)
-    print('action ' + str(actions[action_id]))
+    # print('action ' + str(actions[action_id]))
     robot.direction_vector = actions[action_id]
     robot.move()

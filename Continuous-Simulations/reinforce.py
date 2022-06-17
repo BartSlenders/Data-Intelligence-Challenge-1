@@ -14,7 +14,6 @@ class PolicyNetwork(nn.Module):
     # state_space=2: x_start,y_start
     def __init__(self, state_space, action_space):
         super(PolicyNetwork, self).__init__()
-        # TODO: experiment with different hidden state sizes (instead of 128)
         self.input_layer = nn.Linear(state_space, 128)
         self.output_layer = nn.Linear(128, action_space)
 
@@ -40,7 +39,6 @@ class PolicyNetwork(nn.Module):
 class ValueNetwork(nn.Module):
     def __init__(self, state_space):
         super(ValueNetwork, self).__init__()
-        # TODO: experiment with different hidden state sizes (instead of 128)
         self.input_layer = nn.Linear(state_space, 128)
         self.output_layer = nn.Linear(128, 1)
 
@@ -83,8 +81,6 @@ class ValueNetwork(nn.Module):
 #
 #     return new_filthy, new_goals, blocked, done
 
-
-# TODO: experiment with gamma, alpha, episodes, steps
 def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
     actions = [(0.85, 0), (0, 0.85), (-0.85, 0), (0, -0.85),
                (1.05, 0), (0, 1.05), (-1.05, 0), (0, -1.05),
@@ -189,6 +185,6 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
     state = np.array([x_pos, y_pos])
     # print('state '+str(state))
     action_id, _ = policy_network.get_action(state)
-    print('action ' + str(actions[action_id]))
+    # print('action ' + str(actions[action_id]))
     robot.direction_vector = actions[action_id]
     robot.move()

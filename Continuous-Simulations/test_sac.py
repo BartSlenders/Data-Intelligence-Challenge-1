@@ -1,5 +1,5 @@
 # Import our robot algorithm to use in this simulation:
-from reinforce import robot_epoch as rl
+from sac import robot_epoch as rl
 from continuous import parse_config, Robot
 
 import numpy as np
@@ -9,9 +9,9 @@ import pandas as pd
 stopping_criteria = 100
 
 
-def run(gamma, alpha, episodes, steps):
+def run(gamma, alpha, beta, batch_size, reward_scale, episodes, steps):
     """
-    Executes a run of Reinforce
+    Executes a run of SAC
     :param gamma: the discount factor
     :param alpha: learning rate
     :param episodes: nr of episodes
@@ -34,7 +34,8 @@ def run(gamma, alpha, episodes, steps):
         # Do a robot epoch (basically call the robot algorithm once):
         for robot in grid.robots:
             if robot.alive:
-                rl(robot=robot, gamma=gamma, alpha=alpha, episodes=episodes, steps=steps)
+                rl(robot=robot, gamma=gamma, alpha=alpha, beta=beta, batch_size=batch_size, reward_scale=reward_scale,
+                   episodes=episodes, steps=steps)
 
         # Calculate the cleaned percentage:
         cleanpercent, _ = grid.evaluate(max_filthy, max_goals)
@@ -45,10 +46,10 @@ def run(gamma, alpha, episodes, steps):
     return cleanpercent
 
 
-def generate_results(gamma, alpha, episodes, steps, runs_per_combination=3):
+def generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, steps, runs_per_combination=3):
     """
     Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
-    of REINFORCE, together with the parameters used
+    of SAC, together with the parameters used
     :param gamma: the discount factor
     :param alpha: learning rate
     :param episodes: nr of episodes
@@ -58,21 +59,30 @@ def generate_results(gamma, alpha, episodes, steps, runs_per_combination=3):
     rows = []
     for g in gamma:
         for a in alpha:
-            for episode in episodes:
-                for s in steps:
-                    print('gamma:', g, '\talpha:', a, '\tepisodes:', episode, '\tsteps:', s)
-                    for i in range(runs_per_combination):
-                        cleaned = run(gamma=g, alpha=a, episodes=episode, steps=s)
-                        rows.append([g, a, episode, s, cleaned])
-                    print('\tcleaned:', cleaned)
+            for b in beta:
+                for batch in batch_size:
+                    for reward in reward_scale:
+                        for episode in episodes:
+                            for s in steps:
+                                print('gamma:', g, '\talpha:', a, '\tbeta:', b, '\tbatch_size:', batch,
+                                      '\treward_scale:', reward, '\tepisodes:', episode, '\tsteps:', s)
+                                for i in range(runs_per_combination):
+                                    cleaned = run(gamma=g, alpha=a, beta=b, batch_size=batch, reward_scale=reward,
+                                                  episodes=episode, steps=s)
+                                    rows.append([g, a, b, batch, reward, episode, s, cleaned])
+                                print('\tcleaned:', cleaned)
     my_array = np.array(rows)
-    df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'episodes', 'steps', 'cleaned'])
-    df.to_csv("reinforce_results.csv")
+    df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'beta', 'batch_size', 'reward_scale', 'episodes', 'steps',
+                                         'cleaned'])
+    df.to_csv("sac_results.csv")
 
 
 gamma = [0.9, 0.95, 0.99]
-alpha = [0.001, 0.01, 0.1]
-episodes = [20, 40, 60]
-steps = [40, 60, 100]
+alpha = [0.001, 0.01]
+beta = [0.001, 0.01]
+batch_size = [10, 15]
+reward_scale = [0.1, 1, 2]
+episodes = [1, 7, 20]
+steps = [20, 40, 90]
 
-generate_results(gamma, alpha, episodes, steps)
+generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, steps)
