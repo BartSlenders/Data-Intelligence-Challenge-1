@@ -65,14 +65,31 @@ def generate_results(gamma, alpha, episodes, steps, runs_per_combination=3):
                         cleaned = run(gamma=g, alpha=a, episodes=episode, steps=s)
                         rows.append([g, a, episode, s, cleaned])
                         print('\tcleaned:', cleaned)
-    my_array = np.array(rows)
-    df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'episodes', 'steps', 'cleaned'])
-    df.to_csv("reinforce_results.csv")
+                        my_array = np.array(rows)
+                        df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'episodes', 'steps', 'cleaned'])
+                        df.to_csv("reinforce_results.csv")
 
+# original
+# gamma = [0.9, 0.95, 0.99]
+# alpha = [0.001, 0.01, 0.1]
+# episodes = [20, 40, 60]
+# steps = [40, 60, 100]
 
-gamma = [0.9, 0.95, 0.99]
+gamma = [0.95, 0.99]
 alpha = [0.001, 0.01, 0.1]
 episodes = [20, 40, 60]
 steps = [40, 60, 100]
+
+# missing
+# gamma = [0.9]
+# alpha = [0.01]
+# episodes = [60]
+# steps = [100]
+
+# missing
+# gamma = [0.9]
+# alpha = [0.1]
+# episodes = [20, 40, 60]
+# steps = [40, 60, 100]
 
 generate_results(gamma, alpha, episodes, steps)

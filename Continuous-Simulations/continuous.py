@@ -193,8 +193,8 @@ class Grid:
         self.filthy = []
         self.robots = []
 
-        self.fig = plt.figure()
-        axes = self.fig.add_subplot(111)
+        #self.fig = plt.figure()
+        #axes = self.fig.add_subplot(111)
         self.border_line, = plt.plot(*self.get_border_coords(), color='black')
         self.obstacle_lines = []
         self.goal_lines = []

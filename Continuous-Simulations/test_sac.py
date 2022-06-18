@@ -71,10 +71,11 @@ def generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, ste
                                                   episodes=episode, steps=s)
                                     rows.append([g, a, b, batch, reward, episode, s, cleaned])
                                     print('\tcleaned:', cleaned)
-    my_array = np.array(rows)
-    df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'beta', 'batch_size', 'reward_scale', 'episodes', 'steps',
-                                         'cleaned'])
-    df.to_csv("sac_results.csv")
+                                    my_array = np.array(rows)
+                                    df = pd.DataFrame(my_array, columns=['gamma', 'alpha', 'beta', 'batch_size',
+                                                                         'reward_scale', 'episodes', 'steps',
+                                                                         'cleaned'])
+                                    df.to_csv("sac_results.csv")
 
 
 gamma = [0.9, 0.95, 0.99]
