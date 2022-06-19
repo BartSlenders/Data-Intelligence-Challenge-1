@@ -10,8 +10,15 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class ActorCriticNetwork(nn.Module):
-
+    """
+    Class implementing a shared network architecture between an actor and a critic network
+    """
     def __init__(self, state_space, action_space):
+        """
+        Initializes the actor and critic networks' layers
+        :param state_space: the dimensionality of state (x,y)
+        :param action_space: the number of actions
+        """
         super(ActorCriticNetwork, self).__init__()
 
         self.actor = nn.Sequential(
@@ -33,22 +40,27 @@ class ActorCriticNetwork(nn.Module):
         raise NotImplementedError
 
     def get_action(self, state):
-
-        # convert state to float tensor, add 1 dimension, allocate tensor on device
+        """
+        Sample an action and its log probability from the actor network
+        :param state: a state (x,y)
+        :returns action_id, log_prob: an action and its log probability
+        """
         state = torch.from_numpy(state).float().unsqueeze(0)
-
-        # use network to predict action probabilities
         action_probs = self.actor(state)
-
-        # sample an action using the probability distribution
         categorical_distribution = Categorical(action_probs)
         action = categorical_distribution.sample()
+        action_id = action.item()
+        log_prob = categorical_distribution.log_prob(action)
 
-        # return action, log_prob
-        return action.item(), categorical_distribution.log_prob(action)
+        return action_id, log_prob
 
     def evaluate_action(self, states, actions):
-
+        """
+        Sample an action and its log probability from the actor network
+        :param states: the states in the batch
+        :param actions: the actions in the batch
+        :returns action_id, log_prob: an action and its log probability
+        """
         # convert state to float tensor, add 1 dimension, allocate tensor on device
         states_tensor = torch.stack([torch.from_numpy(state).float().unsqueeze(0) for state in states]).squeeze(1)
 
@@ -62,40 +74,8 @@ class ActorCriticNetwork(nn.Module):
         return categorical_distribution.log_prob(torch.Tensor(actions)), categorical_distribution.entropy()
 
 
-# def check_intersections(bounding_box, filthy, goals, obstacles, grid):
-#     blocked = any([ob.intersect(bounding_box) for ob in obstacles]) or \
-#                           not (bounding_box.x1 >= 0 and bounding_box.x2 <= grid.width and bounding_box.y1 >= 0 and
-#                                bounding_box.y2 <= grid.height)
-#
-#     if blocked:
-#         return filthy, goals, blocked, False
-#
-#     new_filthy = copy.deepcopy(filthy)
-#     for i, filth in enumerate(filthy):
-#         if filth is not None:
-#             if filth.intersect(bounding_box):
-#                 new_filthy[i] = None
-#
-#     new_filthy = [i for i in new_filthy if i]
-#
-#     new_goals = copy.deepcopy(goals)
-#     for i, goal in enumerate(goals):
-#         if goal is not None:
-#             if goal.intersect(bounding_box):
-#                 new_goals[i] = None
-#
-#     new_goals = [i for i in new_goals if i]
-#
-#     if len(new_filthy) == 0 and len(new_goals) == 0:
-#         done = True
-#     else:
-#         done = False
-#
-#     return new_filthy, new_goals, blocked, done
-
-
 def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, actor_lr=0.0003, critic_lr=0.001,
-                batch_size=10, episodes=20, steps=40):
+                batch_size=5, episodes=20, steps=40):
     actions = [(0.85, 0), (0, 0.85), (-0.85, 0), (0, -0.85),
                (1.05, 0), (0, 1.05), (-1.05, 0), (0, -1.05),
                (0.46, 0.46), (-0.46, 0.46), (0.46, -0.46), (-0.46, -0.46),
