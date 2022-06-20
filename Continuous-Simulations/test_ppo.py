@@ -12,10 +12,15 @@ stopping_criteria = 100
 def run(gamma, epsilon, c1, c2, k_epoch, actor_lr, critic_lr, episodes, steps):
     """
     Executes a run of PPO
-    :param gamma: the discount factor
-    :param alpha: learning rate
-    :param episodes: nr of episodes
-    :param steps: nr of steps
+    :param gamma: discount factor
+    :param epsilon: threshold of divergence between old and new policy
+    :param c1: weight of critic network MSE loss
+    :param c2: weight of entropy
+    :param k_epoch: number of training epochs
+    :param actor_lr: actor learning rate
+    :param critic_lr: critic learning rate
+    :param episodes: number of episodes
+    :param steps: number of steps
     """
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -48,12 +53,17 @@ def run(gamma, epsilon, c1, c2, k_epoch, actor_lr, critic_lr, episodes, steps):
 
 def generate_results(gamma, epsilon, c1, c2, k_epoch, actor_lr, critic_lr, episodes, steps, runs_per_combination=3):
     """
-    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
+    Generates a csv file under the name "ppo_results.csv" containing the probabilities and efficiencies of multiple runs
     of PPO, together with the parameters used
-    :param gamma: the discount factor
-    :param alpha: learning rate
-    :param episodes: nr of episodes
-    :param steps: nr of steps
+    :param gamma: discount factor
+    :param epsilon: threshold of divergence between old and new policy
+    :param c1: weight of critic network MSE loss
+    :param c2: weight of entropy
+    :param k_epoch: number of training epochs
+    :param actor_lr: actor learning rate
+    :param critic_lr: critic learning rate
+    :param episodes: number of episodes
+    :param steps: number of steps
     :param runs_per_combination: nr of runs for each combination
     """
     rows = []
@@ -90,11 +100,11 @@ def generate_results(gamma, epsilon, c1, c2, k_epoch, actor_lr, critic_lr, episo
 # episodes = [10, 20, 40]
 # steps = [20, 40, 60]
 
-gamma = [0.95] #0.99
+gamma = [0.95]
 epsilon = [0.1, 0.2]
 c1 = [0.5, 0.1]
 c2 = [0.01, 0.1]
-k_epoch = [20, 40]
+k_epoch = [40]
 actor_lr = [0.0003, 0.001]
 critic_lr = [0.001, 0.01]
 episodes = [5]

@@ -12,10 +12,10 @@ stopping_criteria = 100
 def run(gamma, alpha, episodes, steps):
     """
     Executes a run of Reinforce
-    :param gamma: the discount factor
-    :param alpha: learning rate
-    :param episodes: nr of episodes
-    :param steps: nr of steps
+    :param gamma: discount factor
+    :param alpha: learning rate for both networks
+    :param episodes: number of episodes
+    :param steps: number of steps
     """
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -47,12 +47,12 @@ def run(gamma, alpha, episodes, steps):
 
 def generate_results(gamma, alpha, episodes, steps, runs_per_combination=3):
     """
-    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
+    Generates a csv file under the name "reinforce_results.csv" containing the probabilities and efficiencies of multiple runs
     of REINFORCE, together with the parameters used
-    :param gamma: the discount factor
-    :param alpha: learning rate
-    :param episodes: nr of episodes
-    :param steps: nr of steps
+    :param gamma: discount factor
+    :param alpha: learning rate for both networks
+    :param episodes: number of episodes
+    :param steps: number of steps
     :param runs_per_combination: nr of runs for each combination
     """
     rows = []
@@ -70,26 +70,9 @@ def generate_results(gamma, alpha, episodes, steps, runs_per_combination=3):
                         df.to_csv("reinforce_results.csv")
 
 # original
-# gamma = [0.9, 0.95, 0.99]
-# alpha = [0.001, 0.01, 0.1]
-# episodes = [20, 40, 60]
-# steps = [40, 60, 100]
-
-gamma = [0.95, 0.99]
+gamma = [0.9, 0.95, 0.99]
 alpha = [0.001, 0.01, 0.1]
 episodes = [20, 40, 60]
 steps = [40, 60, 100]
-
-# missing
-# gamma = [0.9]
-# alpha = [0.01]
-# episodes = [60]
-# steps = [100]
-
-# missing
-# gamma = [0.9]
-# alpha = [0.1]
-# episodes = [20, 40, 60]
-# steps = [40, 60, 100]
 
 generate_results(gamma, alpha, episodes, steps)

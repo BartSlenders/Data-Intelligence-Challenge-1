@@ -12,10 +12,13 @@ stopping_criteria = 100
 def run(gamma, alpha, beta, batch_size, reward_scale, episodes, steps):
     """
     Executes a run of SAC
-    :param gamma: the discount factor
-    :param alpha: learning rate
-    :param episodes: nr of episodes
-    :param steps: nr of steps
+    :param gamma: discount factor
+    :param alpha: learning rate actor network
+    :param beta: learning rate for critic and value network
+    :param batch_size: maximum number of elements in batch
+    :param reward_scale: encourages exploration when it is decreased, encourages exploitation when increased
+    :param episodes: number of episodes
+    :param steps: number of steps
     """
     # Open the grid file.
     # (You can create one yourself using the provided editor).
@@ -48,12 +51,15 @@ def run(gamma, alpha, beta, batch_size, reward_scale, episodes, steps):
 
 def generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, steps, runs_per_combination=3):
     """
-    Generates a csv file under the name "results.csv" containing the probabilities and efficiencies of multiple runs
+    Generates a csv file under the name "sac_results.csv" containing the probabilities and efficiencies of multiple runs
     of SAC, together with the parameters used
-    :param gamma: the discount factor
-    :param alpha: learning rate
-    :param episodes: nr of episodes
-    :param steps: nr of steps
+    :param gamma: discount factor
+    :param alpha: learning rate actor network
+    :param beta: learning rate for critic and value network
+    :param batch_size: maximum number of elements in batch
+    :param reward_scale: encourages exploration when it is decreased, encourages exploitation when increased
+    :param episodes: number of episodes
+    :param steps: number of steps
     :param runs_per_combination: nr of runs for each combination
     """
     rows = []

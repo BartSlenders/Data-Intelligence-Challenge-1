@@ -101,7 +101,6 @@ def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
     policy_optimizer = optim.Adam(policy_network.parameters(), lr=alpha)
     value_optimizer = optim.Adam(value_network.parameters(), lr=alpha)
 
-    # initial state coordinates
     x_pos, y_pos = robot.pos
 
     for _ in range(episodes):
