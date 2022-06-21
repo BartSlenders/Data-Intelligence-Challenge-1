@@ -296,6 +296,7 @@ class Grid:
         batteryleft = sum([i.battery_lvl for i in self.robots])/len(self.robots)
         return cleanpercent, batteryleft
 
+
 class Robot:
     def __init__(self, id, size=1, battery_drain_p=0, battery_drain_lam=0):
         self.size = size
@@ -363,6 +364,7 @@ class Robot:
         intersecting = not (x2 <= other.x1 or x1 >= other.x2 or y2 <= other.y1 or y1 >= other.y2)
         inside = (other.x1 >= x1 and other.x2 <= x2 and other.y1 >= y1 and other.y2 <= y2)
         return intersecting or inside
+
 
 def parse_config(file, divideby = 1):
     with open(file, 'r') as f:

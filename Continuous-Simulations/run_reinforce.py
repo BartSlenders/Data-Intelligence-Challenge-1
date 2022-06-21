@@ -1,5 +1,4 @@
 from continuous import parse_config, Robot
-import time
 import matplotlib.pyplot as plt
 from reinforce import robot_epoch
 

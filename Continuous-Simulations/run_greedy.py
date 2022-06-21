@@ -2,8 +2,6 @@ from continuous import parse_config, Robot, SimGrid
 import time
 import matplotlib.pyplot as plt
 import random
-from copy import deepcopy
-
 plt.ion()
 
 grid = parse_config('random_house_0.grid', divideby=1)
