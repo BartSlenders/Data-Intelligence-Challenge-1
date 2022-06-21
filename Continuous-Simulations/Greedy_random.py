@@ -18,8 +18,9 @@ Potential_moves = [(0.85,0), (0,0.85), (-0.85,0), (0,-0.85),
                     (1.05,0), (0,1.05), (-1.05,0), (0,-1.05),
                    (1.06,1.06),(-1.06,1.06),(1.06,-1.06),(-1.06,-1.06)]
 
+cleanpercent = 0
 while True:
-    grid.plot_grid()
+    grid.plot_grid('Greedy', str(round(cleanpercent, 2)))
     # Stop simulation if all robots died:
     if all([not robot.alive for robot in grid.robots]):
         break
@@ -34,7 +35,6 @@ while True:
                 reward = value
                 bestmove = [move]
                 if value > 1:
-                    print(reward)
                     break
             elif value == reward:
                 bestmove.append(move)
@@ -43,9 +43,10 @@ while True:
         move = (move[0], move[1])
         robot.direction_vector = move
         robot.move()
+        cleanpercent, batteryleft = grid.evaluate(max_filthy, max_goals)
 
 cleanpercent, batteryleft = grid.evaluate(max_filthy, max_goals)
 print('the floor is', cleanpercent, 'percent clean')
 print('there is', batteryleft, 'of the battery left')
-grid.plot_grid()
+grid.plot_grid('Greedy', str(round(cleanpercent, 2)))
 time.sleep(3)

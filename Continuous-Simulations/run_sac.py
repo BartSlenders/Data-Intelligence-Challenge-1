@@ -12,8 +12,9 @@ grid.spawn_robots([Robot(id=1, battery_drain_p=1, battery_drain_lam=0.5)],
 max_filthy = len(grid.filthy)
 max_goals = len(grid.goals)
 
+cleanpercent = 0
 while True:
-    grid.plot_grid()
+    grid.plot_grid('SAC', str(round(cleanpercent, 2)))
     # Stop simulation if all robots died:
     if all([not robot.alive for robot in grid.robots]):
         break
@@ -25,5 +26,5 @@ while True:
             print('the floor is', cleanpercent, 'percent clean')
             print('there is', batteryleft, 'of the battery left')
 
-grid.plot_grid()
+grid.plot_grid('SAC', str(round(cleanpercent, 2)))
 time.sleep(3)

@@ -253,12 +253,13 @@ class Grid:
 
         return new_filthy, new_goals, blocked
 
-    def plot_grid(self):
+    def plot_grid(self, name, clean):
         for i, robot in enumerate(self.robots):
             robot_box = robot.history[-1]
             self.robot_lines[i].set_xdata([robot_box.x1, robot_box.x2, robot_box.x2, robot_box.x1, robot_box.x1])
             self.robot_lines[i].set_ydata([robot_box.y1, robot_box.y1, robot_box.y2, robot_box.y2, robot_box.y1])
-        plt.title('Battery levels: ' + '|'.join([str(round(robot.battery_lvl, 2)) for robot in self.robots]))
+        plt.title(name+' | ' + 'Clean % ' + clean + ' | Battery levels: ' + '|'.join([str(round(robot.battery_lvl, 2))
+                                                                                      for robot in self.robots]))
         plt.draw()
         plt.pause(0.0001)
 

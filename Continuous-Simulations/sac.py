@@ -355,7 +355,7 @@ class Agent:
 
 
 def robot_epoch(robot, gamma=0.9, alpha=0.001, state_space=2, action_space=2, max_action=1, beta=0.001,
-                 max_size=1000000, tau=0.005, batch_size=5, reward_scale=2, episodes=20, steps=40):
+                 max_size=1000000, tau=0.005, batch_size=5, reward_scale=2, episodes=3, steps=10):
     """
     Execute SAC algorithm to find the best move
     :param robot: main actor of type Robot
