@@ -87,9 +87,9 @@ def generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, ste
 gamma = [0.9, 0.95, 0.99]
 alpha = [0.001, 0.01]
 beta = [0.001, 0.01]
-batch_size = [10, 15]
+batch_size = [5]
 reward_scale = [0.1, 1, 2]
-episodes = [3, 7, 20]
-steps = [20, 40, 90]
+episodes = [3]
+steps = [10]
 
 generate_results(gamma, alpha, beta, batch_size, reward_scale, episodes, steps)
