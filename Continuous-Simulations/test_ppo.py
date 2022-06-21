@@ -90,21 +90,11 @@ def generate_results(gamma, epsilon, c1, c2, k_epoch, actor_lr, critic_lr, episo
                                             df.to_csv("ppo_results.csv")
 
 
-# gamma = [0.95, 0.99]
-# epsilon = [0.1, 0.2]
-# c1 = [0.5, 0.1]
-# c2 = [0.01, 0.1]
-# k_epoch = [20, 40]
-# actor_lr = [0.0003, 0.001]
-# critic_lr = [0.001, 0.01]
-# episodes = [10, 20, 40]
-# steps = [20, 40, 60]
-
-gamma = [0.95]
+gamma = [0.95, 0.99]
 epsilon = [0.1, 0.2]
 c1 = [0.5, 0.1]
 c2 = [0.01, 0.1]
-k_epoch = [40]
+k_epoch = [20, 40]
 actor_lr = [0.0003, 0.001]
 critic_lr = [0.001, 0.01]
 episodes = [5]
