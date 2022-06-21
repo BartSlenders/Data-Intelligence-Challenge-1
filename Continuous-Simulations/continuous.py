@@ -23,43 +23,6 @@ class Square:
     def update_pos(self, x, y):
         self.x1, self.x2, self.y1, self.y2 = x, x + self.x_size, y, y + self.y_size
 
-    # def line_intersect(self, line):
-    #     x3, x4, y3, y4 = line
-    #     A1 = (y3 - y4)
-    #     B1 = (x4 - x3)
-    #     C1 = -(x3 * y4 - x4 * y3)
-    #     squarelines = [(self.x1, self.x2, self.y1, self.y1), (self.x1, self.x2, self.y2, self.y2),
-    #                    (self.x1, self.x1, self.y1, self.y2), (self.x2, self.x2, self.y1, self.y2)]
-    #     for x1,x2,y1,y2 in squarelines:
-    #         A2 = (y1 - y2)
-    #         B2 = (x2 - x1)
-    #         C2 = -(x1 * y2 - x2 * y1)
-    #         D = A1 * B2 - B1 * A2
-    #         Dx = C1 * B2 - B1 * C2
-    #         Dy = A1 * C2 - C1 * A2
-    #         if D != 0:
-    #             px = Dx / D
-    #             py = Dy / D
-    #             squarepoint = Square(px, px, py, py)
-    #             if self.intersect(squarepoint):
-    #                 print(D,Dx,Dy)
-    #                 return True
-    #     return False
-    #
-    # def line_intersect_old(self,line):
-    #     squarelines = [(self.x1,self.x2,self.y1,self.y1), (self.x1,self.x2,self.y2,self.y2),
-    #                    (self.x1,self.x1,self.y1,self.y2), (self.x2,self.x2,self.y1,self.y2)]
-    #     x3, x4, y3, y4 = line
-    #     for x1,x2,y1,y2 in squarelines:
-    #         px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / (
-    #                     (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
-    #         py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / (
-    #                     (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
-    #         squarepoint = Square(px,px,py,py)
-    #         if self.intersect(squarepoint):
-    #             return True
-    #     return False
-
 
 class SimGrid:
     """A different grid to make copies of the existing grid,
@@ -100,16 +63,6 @@ class SimGrid:
                     reward -= 3
         # put the robot back in its original position
         self.move_robot((-directionvector[0], -directionvector[1]))
-        # # the second loop is to check if our corners go over obstacles between the move
-        # for obstacle in self.obstacles:
-        #     robotcorners = [(self.robot.pos[0],self.robot.pos[1]),
-        #                     (self.robot.pos[0]+directionvector[0],self.robot.pos[1]),
-        #                     (self.robot.pos[0],self.robot.pos[1]+directionvector[1]),
-        #                     (self.robot.pos[0]+directionvector[0],self.robot.pos[1]+directionvector[1])]
-        #     lines = [(x1, x1+directionvector[0], y1, y1+directionvector[1]) for x1, y1 in robotcorners]
-        #     for line in lines:
-        #         if obstacle.line_intersect(line):
-        #             reward -= 3
         return reward
 
     def something(self):
