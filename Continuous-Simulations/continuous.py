@@ -8,7 +8,6 @@ import ast
 matplotlib.use("TkAgg")
 
 
-
 class Square:
     def __init__(self, x1, x2, y1, y2):
         self.x1, self.x2, self.y1, self.y2 = x1, x2, y1, y2
@@ -25,9 +24,15 @@ class Square:
 
 
 class SimGrid:
-    """A different grid to make copies of the existing grid,
-    mainly to calculate rewards and simulate it more discretely"""
+    """
+    A different grid to make copies of the existing grid,
+    mainly to calculate rewards and simulate it more discretely
+    """
     def __init__(self, grid):
+        """
+        Initialize SimGrid
+        :param grid: a Grid object
+        """
         self.width = grid.width
         self.height = grid.height
         self.obstacles = grid.obstacles
@@ -39,14 +44,20 @@ class SimGrid:
         self.robot_lines = grid.robot_lines[0]
 
     def move_robot(self, directionvector):
-        """"this function will move the robot, not by actually moving,
+        """"
+        this function will move the robot, not by actually moving,
         but by teleporting it forward by the directionvector
-        right now, we do not yet remove reward tiles"""
+        right now, we do not yet remove reward tiles
+        :param directionvector: an action (x,y), where x and y are real number
+        """
         self.robot.pos = (self.robot.pos[0] + directionvector[0], self.robot.pos[1] + directionvector[1])
 
     def reward(self, directionvector):
-        """"this function will return the reward of a move
-        In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used"""
+        """"
+        this function will return the reward of a move
+        In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used
+        :param directionvector: an action (x,y), where x and y are real number
+        """
         self.move_robot(directionvector)
         reward = 0
         for goal in self.goals:
@@ -70,9 +81,18 @@ class SimGrid:
 
 
 class SimGridComplex:
-    """A different grid to make copies of the existing grid,
-    mainly to calculate rewards and simulate it more discretely"""
+    """
+    A different grid to make copies of the existing grid,
+    mainly to calculate rewards and simulate it more discretely
+    """
     def __init__(self, new_state, grid, prior_filthy, prior_goals):
+        """
+        Initialize SimGridComplex
+        :param new_state: the new position (x,y) of the robot
+        :param grid: a Grid object
+        :param prior_filthy:the filthy tiles in the environment before the move
+        :param prior_goals: the goals in the environment before the move
+        """
         self.width = grid.width
         self.height = grid.height
         self.obstacles = grid.obstacles
@@ -85,14 +105,20 @@ class SimGridComplex:
         self.new_state = new_state
 
     def move_robot(self, directionvector):
-        """"this function will move the robot, not by actually moving,
+        """"
+        this function will move the robot, not by actually moving,
         but by teleporting it forward by the directionvector
-        right now, we do not yet remove reward tiles"""
+        right now, we do not yet remove reward tiles
+        :param directionvector: an action (x,y), where x and y are real number
+        """
         self.robot.pos = (self.robot.pos[0] + directionvector[0], self.robot.pos[1] + directionvector[1])
 
     def reward(self, directionvector):
-        """"this function will return the reward of a move
-        In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used"""
+        """"
+        this function will return the reward of a move
+        In order for it to stay accurate, no directionvectors of higher than 1 in a specific dimension should be used
+        :param directionvector: an action (x,y), where x and y are real number
+        """
         self.move_robot(directionvector)
         reward = 0
 
@@ -146,8 +172,6 @@ class Grid:
         self.filthy = []
         self.robots = []
 
-        #self.fig = plt.figure()
-        #axes = self.fig.add_subplot(111)
         self.border_line, = plt.plot(*self.get_border_coords(), color='black')
         self.obstacle_lines = []
         self.goal_lines = []
@@ -303,10 +327,7 @@ class Robot:
         if self.alive:
             if self.direction_vector == (0, 0):  # Literally 0 speed so no movement.
                 return False
-            # print('vector '+str(self.direction_vector[0]))
 
-            # print('init pos: '+str(self.pos))
-            # print('dir vec: '+str(self.direction_vector))
             new_pos = tuple(np.array(self.pos) + self.direction_vector)
             # Temporarily set the new bounding box:
             new_box = deepcopy(self.bounding_box)
@@ -319,7 +340,6 @@ class Robot:
             else:
                 do_battery_drain = np.random.binomial(1, self.battery_drain_p)
                 if do_battery_drain == 1 and self.battery_lvl > 0:
-                    # print('4: '+str(self.direction_vector))
                     self.battery_lvl -= (
                             np.random.exponential(self.battery_drain_lam) * abs(sum(self.direction_vector)))
                     if self.battery_lvl <= 0:
@@ -328,7 +348,6 @@ class Robot:
                         return False
                 del new_box
                 self.pos = new_pos
-                # print('new pos: '+str(self.pos))
                 self.bounding_box.update_pos(*self.pos)
                 self.history.append(self.bounding_box)
                 # Check if in this position we have reached a goal:
