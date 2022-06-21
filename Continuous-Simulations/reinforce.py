@@ -80,7 +80,7 @@ class ValueNetwork(nn.Module):
         return state_value
 
 
-def robot_epoch(robot, gamma=0.95, alpha=0.001, episodes=20, steps=40):
+def robot_epoch(robot, gamma=0.9, alpha=0.1, episodes=20, steps=100):
     """
     Execute Reinforce with baseline algorithm to find the best move
     :param robot: main actor of type Robot

@@ -70,8 +70,8 @@ class ActorCriticNetwork(nn.Module):
         return log_probs, entropy
 
 
-def robot_epoch(robot, gamma=0.99, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, actor_lr=0.0003, critic_lr=0.001,
-                batch_size=5, episodes=20, steps=40):
+def robot_epoch(robot, gamma=0.95, epsilon=0.2, c1=0.5, c2=0.01, k_epoch=40, actor_lr=0.001, critic_lr=0.001,
+                batch_size=5, episodes=5, steps=15):
     """
     Execute PPO algorithm to find the best move
     :param robot: main actor of type Robot
